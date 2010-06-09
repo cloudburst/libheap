@@ -51,7 +51,7 @@ Loading [`libheap`] is the same as any other Python library:
 
 A number of different functions exist to print the overall state of the heap as shown below:
 
-    (gdb) heap -h
+(gdb) heap -h
     ============================== Heap Dump Help ==================================
 
     Options:
@@ -63,9 +63,7 @@ A number of different functions exist to print the overall state of the heap as 
       -l        Print a flat listing of all chunks in an arena
       -s [#]    Print all small bins, or only a single small bin
         
- 
-
-    (gdb) heap
+(gdb) heap
     ================================== Heap Dump ===================================
 
     Arena(s) found:
