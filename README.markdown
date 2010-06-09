@@ -47,6 +47,79 @@ Loading [`libheap`] is the same as any other Python library:
     $ gdb
     (gdb) python from libheap import *
 
+### Overall Heap Status
+
+Finally a number of different functions exist to print the overall state of the heap as shown below:
+
+    (gdb) heap -h
+    ============================== Heap Dump Help ==================================
+
+    Options:
+
+      -a 0x1234 Specify an arena address
+      -b        Print compact bin listing (only free chunks)
+      -c        Print compact arena listing (all chunks)
+      -f [#]    Print all fast bins, or only a single fast bin
+      -l        Print a flat listing of all chunks in an arena
+      -s [#]    Print all small bins, or only a single small bin
+        
+
+    (gdb) heap
+    ================================== Heap Dump ===================================
+
+    Arena(s) found:
+         arena @ 0xf2f3a0
+        
+
+    (gdb) heap -b
+    ================================== Heap Dump ===================================
+
+      fast bin 0   @ 0x804b000
+        free chunk @ 0x804b000 - size 0x10
+      unsorted bin @ 0xf2f3d8
+        free_chunk @ 0x804b010 - size 0x88
+        
+
+    (gdb) heap -f
+    =================================== Fastbins ===================================
+
+    [ fb  0 ] 0xf2f3a8 -> [ 0x0804b000 ] (16)
+    [ fb  1 ] 0xf2f3ac -> [ 0x00000000 ] 
+    [ fb  2 ] 0xf2f3b0 -> [ 0x00000000 ] 
+    [ fb  3 ] 0xf2f3b4 -> [ 0x00000000 ] 
+    [ fb  4 ] 0xf2f3b8 -> [ 0x00000000 ] 
+    [ fb  5 ] 0xf2f3bc -> [ 0x00000000 ] 
+    [ fb  6 ] 0xf2f3c0 -> [ 0x00000000 ] 
+    [ fb  7 ] 0xf2f3c4 -> [ 0x00000000 ] 
+    [ fb  8 ] 0xf2f3c8 -> [ 0x00000000 ] 
+    [ fb  9 ] 0xf2f3cc -> [ 0x00000000 ] 
+        
+
+    (gdb) heap -s 1
+    =================================== Smallbins ==================================
+
+    [ sb 01 ] 0xf2f3d8 -> [ 0x0804b010 | 0x0804b010 ] 
+                          [ 0x00f2f3d0 | 0x00f2f3d0 ]  (136)
+        
+
+    (gdb) heap -l
+    ================================== Heap Dump ===================================
+
+              ADDR             SIZE         STATUS
+    sbrk_base 0x602c00
+    chunk     0x602c00         0x110        (inuse)
+    chunk     0x602d10         0x110        (F) FD 75dea366deb8 BK 602f30 
+    chunk     0x602e20         0x110        (inuse)
+    chunk     0x602f30         0x110        (F) FD 602d10 BK 75dea366deb8 
+    chunk     0x603040         0x110        (inuse)
+    chunk     0x603150         0x20eb0      (top)
+    sbrk_end  0x624008
+        
+
+    (gdb) heap -c
+    ================================== Heap Dump ===================================
+    |A||11||A||11||A||T|
+
 ### Chunks
 
 There are a number of ways to examine a malloc chunk using [`libheap`].  The library has a pretty printer for struct malloc_chunk so we can print any arbitrary address as if it was a valid chunk:
@@ -142,79 +215,6 @@ Python classes also exist for these two important structures so you can examine 
     max_total_mem    = 0x0
     sbrk_base        = 0x809c000
         
-### Overall Heap Status
-
-Finally a number of different functions exist to print the overall state of the heap as shown below:
-
-    (gdb) heap -h
-    ============================== Heap Dump Help ==================================
-
-    Options:
-
-      -a 0x1234 Specify an arena address
-      -b        Print compact bin listing (only free chunks)
-      -c        Print compact arena listing (all chunks)
-      -f [#]    Print all fast bins, or only a single fast bin
-      -l        Print a flat listing of all chunks in an arena
-      -s [#]    Print all small bins, or only a single small bin
-        
-
-    (gdb) heap
-    ================================== Heap Dump ===================================
-
-    Arena(s) found:
-         arena @ 0xf2f3a0
-        
-
-    (gdb) heap -b
-    ================================== Heap Dump ===================================
-
-      fast bin 0   @ 0x804b000
-        free chunk @ 0x804b000 - size 0x10
-      unsorted bin @ 0xf2f3d8
-        free_chunk @ 0x804b010 - size 0x88
-        
-
-    (gdb) heap -f
-    =================================== Fastbins ===================================
-
-    [ fb  0 ] 0xf2f3a8 -> [ 0x0804b000 ] (16)
-    [ fb  1 ] 0xf2f3ac -> [ 0x00000000 ] 
-    [ fb  2 ] 0xf2f3b0 -> [ 0x00000000 ] 
-    [ fb  3 ] 0xf2f3b4 -> [ 0x00000000 ] 
-    [ fb  4 ] 0xf2f3b8 -> [ 0x00000000 ] 
-    [ fb  5 ] 0xf2f3bc -> [ 0x00000000 ] 
-    [ fb  6 ] 0xf2f3c0 -> [ 0x00000000 ] 
-    [ fb  7 ] 0xf2f3c4 -> [ 0x00000000 ] 
-    [ fb  8 ] 0xf2f3c8 -> [ 0x00000000 ] 
-    [ fb  9 ] 0xf2f3cc -> [ 0x00000000 ] 
-        
-
-    (gdb) heap -s 1
-    =================================== Smallbins ==================================
-
-    [ sb 01 ] 0xf2f3d8 -> [ 0x0804b010 | 0x0804b010 ] 
-                          [ 0x00f2f3d0 | 0x00f2f3d0 ]  (136)
-        
-
-    (gdb) heap -l
-    ================================== Heap Dump ===================================
-
-              ADDR             SIZE         STATUS
-    sbrk_base 0x602c00
-    chunk     0x602c00         0x110        (inuse)
-    chunk     0x602d10         0x110        (F) FD 75dea366deb8 BK 602f30 
-    chunk     0x602e20         0x110        (inuse)
-    chunk     0x602f30         0x110        (F) FD 602d10 BK 75dea366deb8 
-    chunk     0x603040         0x110        (inuse)
-    chunk     0x603150         0x20eb0      (top)
-    sbrk_end  0x624008
-        
-
-    (gdb) heap -c
-    ================================== Heap Dump ===================================
-    |A||11||A||11||A||T|
-
 ### Convenience Functions
 
 If you are looking to extend the library or use any of its functionality there are a number of Glibc functions reimplemented in Python.  A short list of the most useful ones is shown below:
