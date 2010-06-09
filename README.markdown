@@ -64,13 +64,14 @@ A number of different functions exist to print the overall state of the heap as 
       -l        Print a flat listing of all chunks in an arena
       -s [#]    Print all small bins, or only a single small bin
         
+#### heap
     (gdb) heap
     ================================== Heap Dump ===================================
 
     Arena(s) found:
          arena @ 0xf2f3a0
         
-
+#### heap -b
     (gdb) heap -b
     ================================== Heap Dump ===================================
 
@@ -79,7 +80,7 @@ A number of different functions exist to print the overall state of the heap as 
       unsorted bin @ 0xf2f3d8
         free_chunk @ 0x804b010 - size 0x88
         
-
+#### heap -f
     (gdb) heap -f
     =================================== Fastbins ===================================
 
@@ -95,13 +96,14 @@ A number of different functions exist to print the overall state of the heap as 
     [ fb  9 ] 0xf2f3cc -> [ 0x00000000 ] 
         
 
+#### heap -s
     (gdb) heap -s 1
     =================================== Smallbins ==================================
 
     [ sb 01 ] 0xf2f3d8 -> [ 0x0804b010 | 0x0804b010 ] 
                           [ 0x00f2f3d0 | 0x00f2f3d0 ]  (136)
         
-
+#### heap -l
     (gdb) heap -l
     ================================== Heap Dump ===================================
 
@@ -115,7 +117,7 @@ A number of different functions exist to print the overall state of the heap as 
     chunk     0x603150         0x20eb0      (top)
     sbrk_end  0x624008
         
-
+#### heap -c
     (gdb) heap -c
     ================================== Heap Dump ===================================
     |A||11||A||11||A||T|
