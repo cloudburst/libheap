@@ -4,7 +4,7 @@
 
 # Installation
 
-## Glibc Installation
+### Glibc Installation
 
 Although [`libheap`] does not require a glibc compiled with gdb debugging support and symbols, it functions best if you do use one.  There are numerous guides to building Glibc manually, the best I have seen is:
 
@@ -40,7 +40,7 @@ The final and easiest step is to install the heap library.  All that is required
 
     $ mv libheap.py /usr/lib/python2.6
 
-## Usage
+# Usage
 
 Loading [`libheap`] is the same as any other Python library:
 
