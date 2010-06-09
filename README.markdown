@@ -2,9 +2,9 @@
 
 [`libheap`] is a GDB python library for examining the Glibc heap implementation on Linux.  It has been tested against Glibc 2.11 and 2.12 on 32bit/64bit systems.
 
-## Installation
+# Installation
 
-### Glibc Installation
+## Glibc Installation
 
 Although [`libheap`] does not require a glibc compiled with gdb debugging support and symbols, it functions best if you do use one.  There are numerous guides to building Glibc manually, the best I have seen is:
 
