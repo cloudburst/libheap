@@ -1,4 +1,4 @@
-## libheap
+# Libheap
 
 [`libheap`] is a GDB python library for examining the Glibc heap implementation on Linux.  It has been tested against Glibc 2.11 and 2.12 on 32bit/64bit systems.
 
@@ -95,8 +95,7 @@ By default an address is treated as a free chunk and reads all of the fields of 
 
 Finally, if we are working on an exploit and want to prototype malloc chunks and see how they would appear within this heap implementation we can pass the class a string of raw memory and see how it would be interpreted:
 
-    (gdb) python print malloc_chunk(mem='\x01\x00\x00\x00\x00\x00\x00\x00
-                            \x02\x00\x00\x00\x00\x00\x00\x00', inuse=True)
+    (gdb) python print malloc_chunk(mem='\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00', inuse=True)
 
     struct malloc_chunk {
     prev_size   = 0x1
@@ -145,9 +144,9 @@ Python classes also exist for these two important structures so you can examine 
         
 ### Overall Heap Status
 
-Finally a number of different functions exist to print the overall state of heap as shown below:
+Finally a number of different functions exist to print the overall state of the heap as shown below:
 
-    gdb> heap -h
+    (gdb) heap -h
     ============================== Heap Dump Help ==================================
 
     Options:
@@ -160,14 +159,14 @@ Finally a number of different functions exist to print the overall state of heap
       -s [#]    Print all small bins, or only a single small bin
         
 
-    gdb> heap
+    (gdb) heap
     ================================== Heap Dump ===================================
 
     Arena(s) found:
          arena @ 0xf2f3a0
         
 
-    gdb> heap -b
+    (gdb) heap -b
     ================================== Heap Dump ===================================
 
       fast bin 0   @ 0x804b000
@@ -176,7 +175,7 @@ Finally a number of different functions exist to print the overall state of heap
         free_chunk @ 0x804b010 - size 0x88
         
 
-    gdb> heap -f
+    (gdb) heap -f
     =================================== Fastbins ===================================
 
     [ fb  0 ] 0xf2f3a8 -> [ 0x0804b000 ] (16)
@@ -191,14 +190,14 @@ Finally a number of different functions exist to print the overall state of heap
     [ fb  9 ] 0xf2f3cc -> [ 0x00000000 ] 
         
 
-    gdb> heap -s 1
+    (gdb) heap -s 1
     =================================== Smallbins ==================================
 
     [ sb 01 ] 0xf2f3d8 -> [ 0x0804b010 | 0x0804b010 ] 
                           [ 0x00f2f3d0 | 0x00f2f3d0 ]  (136)
         
 
-    gdb> heap -l
+    (gdb) heap -l
     ================================== Heap Dump ===================================
 
               ADDR             SIZE         STATUS
@@ -212,7 +211,7 @@ Finally a number of different functions exist to print the overall state of heap
     sbrk_end  0x624008
         
 
-    gdb> heap -c
+    (gdb) heap -c
     ================================== Heap Dump ===================================
     |A||11||A||11||A||T|
 
