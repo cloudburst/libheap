@@ -63,6 +63,7 @@ A number of different functions exist to print the overall state of the heap as 
       -l        Print a flat listing of all chunks in an arena
       -s [#]    Print all small bins, or only a single small bin
         
+ 
 
     (gdb) heap
     ================================== Heap Dump ===================================
