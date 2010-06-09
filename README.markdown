@@ -49,7 +49,7 @@ Loading [`libheap`] is the same as any other Python library:
 
 ### Overall Heap Status
 
-Finally a number of different functions exist to print the overall state of the heap as shown below:
+A number of different functions exist to print the overall state of the heap as shown below:
 
     (gdb) heap -h
     ============================== Heap Dump Help ==================================
