@@ -211,7 +211,6 @@ Python classes also exist for these two important structures so you can examine 
     n_mmaps_max      = 0x10000
     max_n_mmaps      = 0x1
     no_dyn_threshold = 0x0
-    pagesize         = 0x1000
     mmapped_mem      = 0x0
     max_mmapped_mem  = 0x4f000
     max_total_mem    = 0x0

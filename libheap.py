@@ -619,7 +619,6 @@ class malloc_par:
         self.n_mmaps_max      = 0
         self.max_n_mmaps      = 0
         self.no_dyn_threshold = 0
-        self.pagesize         = 0
         self.mmapped_mem      = 0
         self.max_mmapped_mem  = 0
         self.max_total_mem    = 0
@@ -645,9 +644,9 @@ class malloc_par:
             # a string of raw memory was not provided
             try:
                 if SIZE_SZ == 4:
-                    mem = inferior.read_memory(addr, 0x30) 
+                    mem = inferior.read_memory(addr, 0x2c) 
                 elif SIZE_SZ == 8:
-                    mem = inferior.read_memory(addr, 0x60)
+                    mem = inferior.read_memory(addr, 0x58)
             except TypeError:
                 print c_error + "Invalid address specified." + c_none
                 return None
@@ -663,11 +662,10 @@ class malloc_par:
             self.n_mmaps_max,     \
             self.max_n_mmaps,     \
             self.no_dyn_threshold,\
-            self.pagesize,        \
             self.mmapped_mem,     \
             self.max_mmapped_mem, \
             self.max_total_mem,   \
-            self.sbrk_base)       = struct.unpack("<12I", mem)
+            self.sbrk_base)       = struct.unpack("<11I", mem)
         elif SIZE_SZ == 8:
             (self.trim_threshold, \
             self.top_pad,         \
@@ -676,14 +674,13 @@ class malloc_par:
             self.n_mmaps_max,     \
             self.max_n_mmaps,     \
             self.no_dyn_threshold,\
-            self.pagesize,        \
             self.mmapped_mem,     \
             self.max_mmapped_mem, \
             self.max_total_mem,   \
-            self.sbrk_base)       = struct.unpack("<12Q", mem)
+            self.sbrk_base)       = struct.unpack("<11Q", mem)
 
     def __str__(self):
-        return "%s%s%lx%s%lx%s%lx%s%x%s%x%s%x%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" % \
+        return "%s%s%lx%s%lx%s%lx%s%x%s%x%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" % \
                 (c_title + "struct malloc_par {",                  \
                 c_none + "\ntrim_threshold   = " + c_value + "0x", \
                 self.trim_threshold,                               \
@@ -699,8 +696,6 @@ class malloc_par:
                 self.max_n_mmaps,                                  \
                 c_none + "\nno_dyn_threshold = " + c_value + "0x", \
                 self.no_dyn_threshold,                             \
-                c_none + "\npagesize         = " + c_value + "0x", \
-                self.pagesize,                                     \
                 c_none + "\nmmapped_mem      = " + c_value + "0x", \
                 self.mmapped_mem,                                  \
                 c_none + "\nmax_mmapped_mem  = " + c_value + "0x", \
@@ -739,7 +734,7 @@ class malloc_par_printer:
         self.val = val
 
     def to_string(self):
-        return "%s%s%lx%s%lx%s%lx%s%x%s%x%s%x%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" % \
+        return "%s%s%lx%s%lx%s%lx%s%x%s%x%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" % \
                 (c_title + "struct malloc_par {",                  \
                 c_none + "\ntrim_threshold   = " + c_value + "0x", \
                 self.val['trim_threshold'],                        \
@@ -755,8 +750,6 @@ class malloc_par_printer:
                 self.val['max_n_mmaps'],                           \
                 c_none + "\nno_dyn_threshold = " + c_value + "0x", \
                 self.val['no_dyn_threshold'],                      \
-                c_none + "\npagesize         = " + c_value + "0x", \
-                self.val['pagesize'],                              \
                 c_none + "\nmmapped_mem      = " + c_value + "0x", \
                 self.val['mmapped_mem'],                           \
                 c_none + "\nmax_mmapped_mem  = " + c_value + "0x", \
