@@ -1261,12 +1261,13 @@ def print_fastbins(inferior, fb_base, fb_num):
         if fd == 0: #fastbin is empty
             print("")
         else:
-            print("(%d)" % ((MIN_CHUNK_SIZE) +(MALLOC_ALIGNMENT)*fb))
+            fb_size = ((MIN_CHUNK_SIZE) +(MALLOC_ALIGNMENT)*fb)
+            print("(%d)" % fb_size)
             chunk = malloc_chunk(fd, inuse=False)
-            while (chunk.fd != 0):
-                print("%s%26s0x%08lx%s%s%s" % \
-                        (c_value,"[ ",chunk.fd," ] ",c_none,"(%d)" % \
-                        ((MIN_CHUNK_SIZE) + (MALLOC_ALIGNMENT)*fb)))
+            while chunk.fd != 0:
+                if chunk.fd is None:   # could not read memory section
+                    break
+                print("%s%26s0x%08lx%s%s(%d)" % (c_value,"[ ",chunk.fd," ] ",c_none, fb_size))
                 chunk = malloc_chunk(chunk.fd, inuse=False)
 
         if fb_num != None: #only print one fastbin
