@@ -1328,6 +1328,9 @@ def print_bins(inferior, fb_base, sb_base):
         p = malloc_chunk(fb_base-(2*SIZE_SZ)+fb*SIZE_SZ, inuse=False)
 
         while (p.fd != 0):
+            if p.fd is None:
+                break
+
             if print_once:
                 print_once = False
                 print(c_header + "  fast bin %d   @ 0x%lx" % \
