@@ -6,7 +6,6 @@ except ImportError:
 
 import sys
 import struct
-from os import uname
 
 # bash color support
 color_support = True
@@ -47,10 +46,14 @@ c_value  = c_blue_b
 # MALLOC CONSTANTS AND MACROS
 ################################################################################
 
-_machine = uname()[4]
-if _machine == "x86_64":
+def get_arch():
+    return gdb.execute("maintenance info sections ?", to_string=True).strip().split()[-1:]
+
+_machine = get_arch()[0]
+
+if "elf64" in _machine:
     SIZE_SZ = 8
-elif _machine in ("i386", "i686"):
+elif "elf32" in _machine:
     SIZE_SZ = 4
 
 MIN_CHUNK_SIZE    = 4 * SIZE_SZ
