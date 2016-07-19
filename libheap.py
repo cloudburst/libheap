@@ -1078,23 +1078,31 @@ class heap(gdb.Command):
                 print(c_error + "No gdb frame is currently selected." + c_none)
                 return
             except ValueError:
-                print(c_error + "Debug glibc was not found, " \
-                    "guessing main_arena address via offset from libc." + c_none)
+                try:
+                    res = gdb.execute('x/x &main_arena', to_string=True)
+                    arena_address = int(res.strip().split()[0], 16)
+                except gdb.error:
+                    print(c_error + "Debug glibc was not found, " \
+                        "guessing main_arena address via offset from libc." \
+                        + c_none)
 
-                #find heap by offset from end of libc in /proc
-                libc_end,heap_begin = read_proc_maps(inferior.pid)
+                    #find heap by offset from end of libc in /proc
+                    libc_end,heap_begin = read_proc_maps(inferior.pid)
 
-                if SIZE_SZ == 4:
-                    #__malloc_initialize_hook + 0x20
-                    #offset seems to be +0x380 on debug glibc, +0x3a0 otherwise
-                    arena_address = libc_end + 0x3a0
-                elif SIZE_SZ == 8:
-                    #offset seems to be +0xe80 on debug glibc, +0xea0 otherwise
-                    arena_address = libc_end + 0xea0
+                    if SIZE_SZ == 4:
+                        #__malloc_initialize_hook + 0x20
+                        #offset seems to be +0x380 on debug glibc,
+                        #+0x3a0 otherwise
+                        arena_address = libc_end + 0x3a0
+                    elif SIZE_SZ == 8:
+                        #offset seems to be +0xe80 on debug glibc,
+                        #+0xea0 otherwise
+                        arena_address = libc_end + 0xea0
 
-                if libc_end == -1:
-                    print(c_error + "Invalid address read via /proc" + c_none)
-                    return
+                    if libc_end == -1:
+                        print(c_error + "Invalid address read via /proc" \
+                             + c_none)
+                        return
 
         if arena_address == 0:
             print(c_error + "Invalid arena address (0)" + c_none)
@@ -1158,21 +1166,27 @@ class heap(gdb.Command):
             print(c_error + "No gdb frame is currently selected." + c_none)
             return
         except ValueError:
-            print(c_error + "Debug glibc was not found, " \
-                   "guessing mp_ address via offset from main_arena." + c_none)
+            try:
+                res = gdb.execute('x/x &mp_', to_string=True)
+                mp_address = int(res.strip().split()[0], 16)
+            except gdb.error:
+                print(c_error + "Debug glibc was not found, " \
+                       "guessing mp_ address via offset from main_arena." \
+                        + c_none)
 
-            if SIZE_SZ == 4:
-                try:
-                    mp_address = ar_ptr.address.cast(gdb.lookup_type(\
-                                                    "unsigned long")) + 0x460
-                except:
-                    mp_address = ar_ptr.address + 0x460
-            elif SIZE_SZ == 8: #offset 0x880 untested on 64bit
-                try:
-                    mp_address = ar_ptr.address.cast(gdb.lookup_type(\
-                                                    "unsigned long")) + 0x880
-                except:
-                    mp_address = ar_ptr.address + 0x460
+                if SIZE_SZ == 4:
+                    try:
+                        mp_address = ar_ptr.address.cast(
+                            gdb.lookup_type("unsigned long")) + 0x460
+                    except:
+                        mp_address = ar_ptr.address + 0x460
+                elif SIZE_SZ == 8: #offset 0x880 untested on 64bit
+                    try:
+                        mp_address = ar_ptr.address.cast(
+                            gdb.lookup_type("unsigned long")) + 0x880
+                    except:
+                        mp_address = ar_ptr.address + 0x460
+
         sbrk_base = malloc_par(mp_address).sbrk_base
 
         if p_fb:
