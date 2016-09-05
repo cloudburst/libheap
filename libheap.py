@@ -1,3 +1,4 @@
+from __future__ import print_function
 try:
     import gdb
 except ImportError:
@@ -618,6 +619,8 @@ class malloc_par:
         self.trim_threshold   = 0
         self.top_pad          = 0
         self.mmap_threshold   = 0
+        self.arena_test       = 0
+        self.arena_max        = 0
         self.n_mmaps          = 0
         self.n_mmaps_max      = 0
         self.max_n_mmaps      = 0
@@ -647,7 +650,7 @@ class malloc_par:
             # a string of raw memory was not provided
             try:
                 if SIZE_SZ == 4:
-                    mem = inferior.read_memory(addr, 0x2c)
+                    mem = inferior.read_memory(addr, 0x34)
                 elif SIZE_SZ == 8:
                     mem = inferior.read_memory(addr, 0x58)
             except TypeError:
@@ -661,6 +664,8 @@ class malloc_par:
             (self.trim_threshold, \
             self.top_pad,         \
             self.mmap_threshold,  \
+            self.arena_text,      \
+            self.arena_max,       \
             self.n_mmaps,         \
             self.n_mmaps_max,     \
             self.max_n_mmaps,     \
@@ -668,11 +673,13 @@ class malloc_par:
             self.mmapped_mem,     \
             self.max_mmapped_mem, \
             self.max_total_mem,   \
-            self.sbrk_base)       = struct.unpack("<11I", mem)
+            self.sbrk_base)       = struct.unpack("<13I", mem)
         elif SIZE_SZ == 8:
             (self.trim_threshold, \
             self.top_pad,         \
             self.mmap_threshold,  \
+            self.arena_test,      \
+            self.arena_max,       \
             self.n_mmaps,         \
             self.n_mmaps_max,     \
             self.max_n_mmaps,     \
@@ -680,7 +687,7 @@ class malloc_par:
             self.mmapped_mem,     \
             self.max_mmapped_mem, \
             self.max_total_mem,   \
-            self.sbrk_base)       = struct.unpack("<11Q", mem)
+            self.sbrk_base)       = struct.unpack("<5Q4I4Q", mem)
 
     def __str__(self):
         return "%s%s%lx%s%lx%s%lx%s%x%s%x%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" % \
@@ -691,6 +698,10 @@ class malloc_par:
                 self.top_pad,                                      \
                 c_none + "\nmmap_threshold   = " + c_value + "0x", \
                 self.mmap_threshold,                               \
+                c_none + "\narena_test       = " + c_value + "0x", \
+                self.arena_test,                                   \
+                c_none + "\narena_max        = " + c_value + "0x", \
+                self.arena_max,                                    \
                 c_none + "\nn_mmaps          = " + c_value + "0x", \
                 self.n_mmaps,                                      \
                 c_none + "\nn_mmaps_max      = " + c_value + "0x", \
@@ -966,7 +977,7 @@ class print_malloc_stats(gdb.Command):
                 b = bin_at(ar_ptr, i)
                 p = malloc_chunk(first(malloc_chunk(b,inuse=False)),inuse=False)
 
-                while p.address != b:
+                while p.address != int(b):
                     nblocks += 1
                     avail += chunksize(p)
                     p = malloc_chunk(first(p), inuse=False)
@@ -1362,7 +1373,7 @@ def print_bins(inferior, fb_base, sb_base):
         b = sb_base + i*2*SIZE_SZ - 4*SIZE_SZ
         p = malloc_chunk(first(malloc_chunk(b, inuse=False)), inuse=False)
 
-        while p.address != b:
+        while p.address != int(b):
             if print_once:
                 print_once = False
                 if i==1:
@@ -1524,7 +1535,7 @@ class print_bin_layout(gdb.Command):
         print_str  = ""
         count      = 0
 
-        while p.address != b:
+        while p.address != int(b):
             if print_once:
                 print_once=False
                 print_str += "-->  " + c_value + "[bin %d]" % int(arg) + c_none
