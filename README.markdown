@@ -1,38 +1,26 @@
 # Libheap
 
-[`libheap`] is a GDB python library for examining the Glibc heap implementation on Linux.  It has been tested against Glibc 2.11 and 2.12 on 32bit/64bit systems.
+[`libheap`] is a GDB library that uses the python API to examine the Glibc heap implementation (ptmalloc) on Linux.  
 
 # Installation
 
 ### Glibc Installation
 
-Although [`libheap`] does not require a glibc compiled with gdb debugging support and symbols, it functions best if you do use one.  There are numerous guides to building Glibc manually, the best I have seen is:
+Although [`libheap`] does not require a glibc compiled with gdb debugging support and symbols, it functions best if you do use one.  Without debug symbols you will need to supply the address of the main arena yourself. 
 
-[Devpit - Building GLIBC][1]
+On Ubuntu:
 
-On Fedora, they have already done this for you so just simply type:
+    apt-get install libc6-dbg
 
+On Fedora:
+
+    yum install yum-utils
     debuginfo-install glibc
 
-This will automatically install and setup a debug Glibc for you.
+Or:
 
-### GDB Installation
-
-If you are using a modern Fedora, their GDB is bleeding edge enough to already have the latest python support added.  Otherwise you will likely have to build GDB from svn instead using the steps documented by [Tom Tromey][2]:
-
-    $ sudo yum install python-devel git texinfo
-    $ mkdir -p ~/archer/build ~/archer/install
-    $ cd ~/archer
-
-    $ git clone git://sourceware.org/git/archer.git
-    $ cd archer
-    $ git checkout --track -b python origin/archer-tromey-python
-
-    $ cd ../build
-    $ ../archer/configure --prefix=$(cd ../install && pwd)
-    $ make all install
-
-Once this is complete you should have a compiled version of GDB that can be run from archer/install/bin/gdb.
+    dnf install dnf-plugins-core
+    dnf debuginfo-install glibc
 
 ### Libheap Installation
 
