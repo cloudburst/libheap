@@ -1,6 +1,8 @@
 # Libheap
 
-[`libheap`] is a GDB library that uses the python API to examine the Glibc heap implementation (ptmalloc) on Linux.  
+[`libheap`] is a GDB library that uses the python API to examine the Glibc heap implementation (ptmalloc) on Linux.
+
+It is currently hard coded for Intel architecture and glibc 2.19 mostly.  If you try to use other glibc versions, the malloc_state/malloc_par/etc structures will be wrong and it won't work.  The code needs a complete refactoring to fix this.
 
 # Installation
 
