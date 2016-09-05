@@ -24,9 +24,10 @@ Or:
 
 ### Libheap Installation
 
-The final and easiest step is to install the heap library.  All that is required is to move it to somewhere within your Python path (sys.path):
-
-    $ mv libheap.py /usr/lib/python2.6
+    $ mkvirtualenv libheap
+    $ git clone https://github.com/cloudburst/libheap
+    $ cd libheap
+    $ python setup.py install
 
 # Usage
 
