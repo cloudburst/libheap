@@ -1441,7 +1441,7 @@ def print_flat_listing(ar_ptr, sbrk_base):
         p = malloc_chunk(next_chunk(p), inuse=True, read_data=False)
 
     print(c_none + "sbrk_end  " + c_value \
-            + "0x%lx" % (sbrk_base + ar_ptr.system_mem) + c_none)
+            + "0x%lx" % (sbrk_base + ar_ptr.max_system_mem) + c_none)
 
 
 ################################################################################
