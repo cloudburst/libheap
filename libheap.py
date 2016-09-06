@@ -148,12 +148,14 @@ def bin_at(m, i):
     "addressing -- note that bin_at(0) does not exist"
     if SIZE_SZ == 4:
         offsetof_fd = 0x8
-        return (gdb.parse_and_eval("&main_arena.bins[%d]" % \
-            ((i -1) * 2)).cast(gdb.lookup_type('unsigned int')) - offsetof_fd)
+        return int(gdb.parse_and_eval("&main_arena.bins[%d]" % \
+                int((i -1) * 2)).cast(gdb.lookup_type('unsigned int')) \
+                - offsetof_fd)
     elif SIZE_SZ == 8:
         offsetof_fd = 0x10
-        return (gdb.parse_and_eval("&main_arena.bins[%d]" % \
-            ((i -1) * 2)).cast(gdb.lookup_type('unsigned long')) - offsetof_fd)
+        return int(gdb.parse_and_eval("&main_arena.bins[%d]" % \
+                int((i -1) * 2)).cast(gdb.lookup_type('unsigned long')) \
+                - offsetof_fd)
 
 def next_bin(b):
     return (b + 1)
@@ -357,7 +359,7 @@ class malloc_chunk:
                 print(c_error + "Invalid address specified." + c_none)
                 return None
             except RuntimeError:
-                print(c_error + "Could not read address 0x%x" % addr + c_none)
+                print(c_error + "Could not read address 0x%x" % int(addr) + c_none)
                 return None
         else:
             # a string of raw memory was provided
@@ -400,7 +402,7 @@ class malloc_chunk:
                         print(c_error + "Invalid address specified." + c_none)
                         return None
                     except RuntimeError:
-                        print(c_error + "Could not read address 0x%x" % addr \
+                        print(c_error + "Could not read address 0x%x" % int(addr) \
                                 + c_none)
                         return None
 
@@ -1125,7 +1127,7 @@ class heap(gdb.Command):
             if ar_ptr.next == 0:
                 print("%s%s %s 0x%x) %s" % (c_error, \
                         "ERROR: No arenas could be correctly guessed.", \
-                        "(Nothing was found at", ar_ptr.address, c_none))
+                        "(Nothing was found at", int(ar_ptr.address), c_none))
                 return
 
             print(c_title + "==================================", end=' ')
@@ -1134,16 +1136,16 @@ class heap(gdb.Command):
             print(c_title + "Arena(s) found:" + c_none)
             try: #arena address obtained via read_var
                 print("\t arena @ 0x%x" % \
-                        ar_ptr.address.cast(gdb.lookup_type("unsigned long")))
+                        int(ar_ptr.address.cast(gdb.lookup_type("unsigned long"))))
             except: #arena address obtained via -a
-                print("\t arena @ 0x%x" % ar_ptr.address)
+                print("\t arena @ 0x%x" % int(ar_ptr.address))
 
             if ar_ptr.address != ar_ptr.next:
                 #we have more than one arena
 
                 curr_arena = malloc_state(ar_ptr.next)
                 while (ar_ptr.address != curr_arena.address):
-                    print("\t arena @ 0x%x" % curr_arena.address)
+                    print("\t arena @ 0x%x" % int(curr_arena.address))
                     curr_arena = malloc_state(curr_arena.next)
 
                     if curr_arena.address == 0:
@@ -1283,8 +1285,8 @@ def print_fastbins(inferior, fb_base, fb_num):
             return
 
         print("%s%s%d%s%s0x%08lx%s%s%s0x%08lx%s%s" % \
-                (c_header,"[ fb  ",fb," ] ",c_none,offset,\
-                 " -> ",c_value,"[ ",fd," ]",c_none), end=' ')
+                (c_header,"[ fb  ",int(fb)," ] ",c_none,int(offset),\
+                 " -> ",c_value,"[ ",int(fd)," ]",c_none), end=' ')
 
         if fd == 0: #fastbin is empty
             print("")
@@ -1295,7 +1297,7 @@ def print_fastbins(inferior, fb_base, fb_num):
             while chunk.fd != 0:
                 if chunk.fd is None:   # could not read memory section
                     break
-                print("%s%26s0x%08lx%s%s(%d)" % (c_value,"[ ",chunk.fd," ] ",c_none, fb_size))
+                print("%s%26s0x%08lx%s%s(%d)" % (c_value,"[ ",int(chunk.fd)," ] ",c_none, int(fb_size)))
                 chunk = malloc_chunk(chunk.fd, inuse=False)
 
         if fb_num != None: #only print one fastbin
@@ -1321,12 +1323,12 @@ def print_smallbins(inferior, sb_base, sb_num):
             elif SIZE_SZ == 8:
                 fd,bk = struct.unpack("<QQ", mem)
         except RuntimeError:
-            print(c_error + " ERROR: Invalid sb addr 0x%lx" % offset + c_none)
+            print(c_error + " ERROR: Invalid sb addr 0x%lx" % int(offset) + c_none)
             return
 
         print("%s%s%02d%s%s0x%08lx%s%s%s0x%08lx%s0x%08lx%s%s" % \
-                            (c_header,"[ sb ",sb/2," ] ",c_none,offset, \
-                            " -> ",c_value,"[ ", fd, " | ", bk, " ] ",  \
+                            (c_header,"[ sb ",int(sb/2)," ] ",c_none,int(offset), \
+                            " -> ",c_value,"[ ", int(fd), " | ", int(bk), " ] ",  \
                             c_none))
 
         while (1):
@@ -1335,7 +1337,7 @@ def print_smallbins(inferior, sb_base, sb_num):
 
             chunk = malloc_chunk(fd, inuse=False)
             print("%s%26s0x%08lx%s0x%08lx%s%s" % \
-                    (c_value,"[ ",chunk.fd," | ",chunk.bk," ] ",c_none), end=' ')
+                    (c_value,"[ ",int(chunk.fd)," | ",int(chunk.bk)," ] ",c_none), end=' ')
             print("(%d)" % chunksize(chunk))
 
             fd = chunk.fd
@@ -1362,11 +1364,11 @@ def print_bins(inferior, fb_base, sb_base):
             if print_once:
                 print_once = False
                 print(c_header + "  fast bin %d   @ 0x%lx" % \
-                        (fb,p.fd) + c_none)
-            print("    free chunk @ " + c_value + "0x%lx" % p.fd + c_none + \
+                        (int(fb),int(p.fd)) + c_none)
+            print("    free chunk @ " + c_value + "0x%lx" % int(p.fd) + c_none + \
                   " - size" + c_value, end=' ')
             p = malloc_chunk(p.fd, inuse=False)
-            print("0x%lx" % chunksize(p) + c_none)
+            print("0x%lx" % int(chunksize(p)) + c_none)
 
     for i in range(1, NBINS):
         print_once = True
@@ -1379,23 +1381,21 @@ def print_bins(inferior, fb_base, sb_base):
                 if i==1:
                     try:
                         print(c_header + "  unsorted bin @ 0x%lx" % \
-                          (b.cast(gdb.lookup_type("unsigned long")) \
-                          + 2*SIZE_SZ) + c_none)
+                          int(b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ) + c_none)
                     except:
                         print(c_header + "  unsorted bin @ 0x%lx" % \
-                          (b + 2*SIZE_SZ) + c_none)
+                          int(b + 2*SIZE_SZ) + c_none)
                 else:
                     try:
                         print(c_header + "  small bin %d @ 0x%lx" %  \
-                         (i,b.cast(gdb.lookup_type("unsigned long")) \
-                         + 2*SIZE_SZ) + c_none)
+                         (i,int(b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ)) + c_none)
                     except:
                         print(c_header + "  small bin %d @ 0x%lx" % \
-                         (i,b + 2*SIZE_SZ) + c_none)
+                         (i,int(b + 2*SIZE_SZ)) + c_none)
 
             print(c_none + "    free_chunk @ " + c_value \
-                  + "0x%lx " % p.address + c_none        \
-                  + "- size " + c_value + "0x%lx" % chunksize(p) + c_none)
+                  + "0x%lx " % int(p.address) + c_none        \
+                  + "- size " + c_value + "0x%lx" % int(chunksize(p)) + c_none)
 
             p = malloc_chunk(first(p), inuse=False)
 
@@ -1407,13 +1407,13 @@ def print_flat_listing(ar_ptr, sbrk_base):
     print(c_title + "==================================", end=' ')
     print("Heap Dump ===================================\n" + c_none)
     print("%s%14s%17s%15s%s" % (c_header, "ADDR", "SIZE", "STATUS", c_none))
-    print("sbrk_base " + c_value + "0x%lx" % sbrk_base)
+    print("sbrk_base " + c_value + "0x%lx" % int(sbrk_base))
 
     p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
 
     while(1):
         print("%schunk     %s0x%-14lx 0x%-10lx%s" % \
-                (c_none, c_value, p.address, chunksize(p), c_none), end=' ')
+                (c_none, c_value, int(p.address), int(chunksize(p)), c_none), end=' ')
 
         if p.address == top(ar_ptr):
             print("(top)")
@@ -1427,7 +1427,7 @@ def print_flat_listing(ar_ptr, sbrk_base):
         else:
             p = malloc_chunk(p.address, inuse=False)
             print("(F) FD %s0x%lx%s BK %s0x%lx%s" % \
-                    (c_value, p.fd, c_none,c_value,p.bk,c_none), end=' ')
+                    (c_value, int(p.fd), c_none,c_value,int(p.bk),c_none), end=' ')
 
             if ((p.fd == ar_ptr.last_remainder) \
             and (p.bk == ar_ptr.last_remainder) \
@@ -1541,7 +1541,7 @@ class print_bin_layout(gdb.Command):
                 print_str += "-->  " + c_value + "[bin %d]" % int(arg) + c_none
                 count += 1
 
-            print_str += "  <-->  " + c_value + "0x%lx" % p.address + c_none
+            print_str += "  <-->  " + c_value + "0x%lx" % int(p.address) + c_none
             count += 1
             #print_str += "  <-->  0x%lx" % p.address
             p = malloc_chunk(first(p), inuse=False)
