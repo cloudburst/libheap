@@ -689,6 +689,16 @@ class malloc_par:
             self.max_total_mem,   \
             self.sbrk_base)       = struct.unpack("<5Q4I4Q", mem)
 
+        # work around for sbrk_base
+        # if we cannot get sbrk_base from mp_, we can read the heap base from vmmap.
+        if self.sbrk_base == 0:
+            pid, task_id, thread_id = gdb.selected_thread().ptid
+            maps_data = open("/proc/%d/task/%d/maps" % (pid, task_id)).readlines()
+            for line in maps_data:
+                if any(x.strip() == '[heap]' for x in line.split(' ')):
+                    self.sbrk_base = int(line.split(' ')[0].split('-')[0], 16)
+                    break
+
     def __str__(self):
         return "%s%s%lx%s%lx%s%lx%s%x%s%x%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" % \
                 (c_title + "struct malloc_par {",                  \
