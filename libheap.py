@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 try:
     import gdb
 except ImportError:
@@ -7,9 +8,10 @@ except ImportError:
 
 import sys
 import struct
+from printutils import *
 
 # bash color support
-color_support = True
+color_support = False
 if color_support:
     c_red      = "\033[31m"
     c_red_b    = "\033[01;31m"
@@ -38,7 +40,6 @@ else:
     c_teal     = ""
     c_teal_b   = ""
     c_none     = ""
-c_error  = c_red
 c_title  = c_green_b
 c_header = c_yellow_b
 c_value  = c_blue_b
@@ -309,13 +310,13 @@ def mutex_unlock(ar_ptr, inferior=None):
 def get_inferior():
     try:
         if len(gdb.inferiors()) == 0:
-            print(c_error + "No gdb inferior could be found." + c_none)
+            print_error("No gdb inferior could be found.")
             return -1
         else:
             inferior = gdb.inferiors()[0]
             return inferior
     except AttributeError:
-        print(c_error + "This gdb's python support is too old." + c_none)
+        print_error("This gdb's python support is too old.")
         exit()
 
 
@@ -334,9 +335,7 @@ class malloc_chunk:
 
         if addr == None or addr == 0:
             if mem == None:
-                sys.stdout.write(c_error)
-                print("Please specify a valid struct malloc_chunk address.", end=' ')
-                sys.stdout.write(c_none)
+                print_error("Please specify a valid struct malloc_chunk address.")
                 return None
 
             self.address = None
@@ -356,27 +355,23 @@ class malloc_chunk:
                 elif SIZE_SZ == 8:
                     mem = inferior.read_memory(addr, 0x10)
             except TypeError:
-                print(c_error + "Invalid address specified." + c_none)
+                print_error("Invalid address specified.")
                 return None
             except RuntimeError:
-                print(c_error + "Could not read address 0x%x" % int(addr) + c_none)
+                print_error("Could not read address 0x{0:x}".format(addr))
                 return None
         else:
             # a string of raw memory was provided
             if inuse:
                 if (len(mem)!=0x8) and (len(mem)<0x10):
-                    sys.stdout.write(c_error)
-                    print("Insufficient memory provided for a malloc_chunk.", end=' ')
-                    sys.stdout.write(c_none)
+                    print_error("Insufficient memory provided for a malloc_chunk.")
                     return None
                 if len(mem)==0x8 or len(mem)==0x10:
                     #header only provided
                     read_data = False
             else:
                 if (len(mem)!=0x18) and (len(mem)<0x30):
-                    sys.stdout.write(c_error)
-                    print("Insufficient memory provided for a free chunk.", end=' ')
-                    sys.stdout.write(c_none)
+                    print_error("Insufficient memory provided for a free chunk.")
                     return None
 
         if SIZE_SZ == 4:
@@ -399,11 +394,10 @@ class malloc_chunk:
                     try:
                         mem = inferior.read_memory(addr, real_size + SIZE_SZ)
                     except TypeError:
-                        print(c_error + "Invalid address specified." + c_none)
+                        print_error("Invalid address specified.")
                         return None
                     except RuntimeError:
-                        print(c_error + "Could not read address 0x%x" % int(addr) \
-                                + c_none)
+                        print_error("Could not read address 0x{0:x}".format(addr))
                         return None
 
                 real_size = (real_size - SIZE_SZ) / SIZE_SZ
@@ -521,9 +515,7 @@ class malloc_state:
 
         if addr == None:
             if mem == None:
-                sys.stdout.write(c_error)
-                print("Please specify a struct malloc_state address.")
-                sys.stdout.write(c_none)
+                print_error("Please specify a struct malloc_state address.")
                 return None
 
             self.address = None
@@ -543,10 +535,10 @@ class malloc_state:
                 elif SIZE_SZ == 8:
                     mem = inferior.read_memory(addr, 0x880)
             except TypeError:
-                print(c_error + "Invalid address specified." + c_none)
+                print_error("Invalid address specified.")
                 return None
             except RuntimeError:
-                print(c_error + "Could not read address 0x%x" % addr + c_none)
+                print_error("Could not read address 0x{0:x}".format(addr))
                 return None
 
         if SIZE_SZ == 4:
@@ -634,9 +626,7 @@ class malloc_par:
 
         if addr == None:
             if mem == None:
-                sys.stdout.write(c_error)
-                print("Please specify a struct malloc_par address.")
-                sys.stdout.write(c_none)
+                print_error("Please specify a struct malloc_par address.")
                 return None
 
             self.address = None
@@ -656,10 +646,10 @@ class malloc_par:
                 elif SIZE_SZ == 8:
                     mem = inferior.read_memory(addr, 0x58)
             except TypeError:
-                print(c_error + "Invalid address specified." + c_none)
+                print_error("Invalid address specified.")
                 return None
             except RuntimeError:
-                print(c_error + "Could not read address 0x%x" % addr + c_none)
+                print_error("Could not read address 0x{0:x}".format(addr))
                 return None
 
         if SIZE_SZ == 4:
@@ -919,27 +909,19 @@ class print_malloc_stats(gdb.Command):
                 for item in arg:
                     if item.find("main_arena") != -1:
                         if len(item) < 12:
-                            sys.stdout.write(c_error)
-                            print("Malformed main_arena parameter")
-                            sys.stdout.write(c_none)
+                            print_error("Malformed main_arena parameter")
                             return
                         else:
                             main_arena_address = int(item[11:],16)
         except RuntimeError:
-            sys.stdout.write(c_error)
-            print("No frame is currently selected.")
-            sys.stdout.write(c_none)
+            print_error("No frame is currently selected.")
             return
         except ValueError:
-            sys.stdout.write(c_error)
-            print("Debug glibc was not found.")
-            sys.stdout.write(c_none)
+            print_error("Debug glibc was not found.")
             return
 
         if main_arena_address == 0:
-            sys.stdout.write(c_error)
-            print("Invalid main_arena address (0)")
-            sys.stdout.write(c_none)
+            print_error("Invalid main_arena address (0)")
             return
 
         in_use_b = mp['mmapped_mem']
@@ -1088,16 +1070,15 @@ class heap(gdb.Command):
                 main_arena = gdb.selected_frame().read_var('main_arena')
                 arena_address = main_arena.address
             except RuntimeError:
-                print(c_error + "No gdb frame is currently selected." + c_none)
+                print_error("No gdb frame is currently selected.")
                 return
             except ValueError:
                 try:
                     res = gdb.execute('x/x &main_arena', to_string=True)
                     arena_address = int(res.strip().split()[0], 16)
                 except gdb.error:
-                    print(c_error + "Debug glibc was not found, " \
-                        "guessing main_arena address via offset from libc." \
-                        + c_none)
+                    print_error("Debug glibc was not found.")
+                    print_error("Guessing main_arena address via offset from libc.")
 
                     #find heap by offset from end of libc in /proc
                     libc_end,heap_begin = read_proc_maps(inferior.pid)
@@ -1113,21 +1094,19 @@ class heap(gdb.Command):
                         arena_address = libc_end + 0xea0
 
                     if libc_end == -1:
-                        print(c_error + "Invalid address read via /proc" \
-                             + c_none)
+                        print_error("Invalid address read via /proc")
                         return
 
         if arena_address == 0:
-            print(c_error + "Invalid arena address (0)" + c_none)
+            print_error("Invalid arena address (0)")
             return
 
         ar_ptr = malloc_state(arena_address)
 
         if len(arg) == 0:
             if ar_ptr.next == 0:
-                print("%s%s %s 0x%x) %s" % (c_error, \
-                        "ERROR: No arenas could be correctly guessed.", \
-                        "(Nothing was found at", int(ar_ptr.address), c_none))
+                print_error("No arenas could be correctly guessed.")
+                print_error("Nothing was found at 0x{0:x}".format(ar_ptr.address))
                 return
 
             print(c_title + "==================================", end=' ')
@@ -1149,8 +1128,7 @@ class heap(gdb.Command):
                     curr_arena = malloc_state(curr_arena.next)
 
                     if curr_arena.address == 0:
-                        print(c_error + \
-                           "ERROR: No arenas could be correctly found." + c_none)
+                        print_error("No arenas could be correctly found.")
                         break #breaking infinite loop
 
             print("")
@@ -1176,16 +1154,15 @@ class heap(gdb.Command):
             mp_ = gdb.selected_frame().read_var('mp_')
             mp_address = mp_.address
         except RuntimeError:
-            print(c_error + "No gdb frame is currently selected." + c_none)
+            print_error("No gdb frame is currently selected.")
             return
         except ValueError:
             try:
                 res = gdb.execute('x/x &mp_', to_string=True)
                 mp_address = int(res.strip().split()[0], 16)
             except gdb.error:
-                print(c_error + "Debug glibc was not found, " \
-                       "guessing mp_ address via offset from main_arena." \
-                        + c_none)
+                print_error("Debug glibc could not be found.")
+                print_error("Guessing mp_ address via offset from main_arena.")
 
                 if SIZE_SZ == 4:
                     try:
@@ -1231,7 +1208,7 @@ def read_proc_maps(pid):
     try:
         fd = open(filename)
     except IOError:
-        print(c_error + "Unable to open %s" % filename + c_none)
+        print_error("Unable to open {0}".format(filename))
         return -1,-1
 
     found = libc_begin = libc_end = heap_begin = heap_end = 0
@@ -1252,11 +1229,11 @@ def read_proc_maps(pid):
     fd.close()
 
     if libc_begin==0 or libc_end==0:
-        print(c_error+"Unable to read libc address information via /proc"+c_none)
+        print_error("Unable to read libc address information via /proc")
         return -1,-1
 
     if heap_begin==0 or heap_end==0:
-        print(c_error+"Unable to read heap address information via /proc"+c_none)
+        print_error("Unable to read heap address information via /proc")
         return -1,-1
 
     return libc_end,heap_begin
@@ -1281,7 +1258,7 @@ def print_fastbins(inferior, fb_base, fb_num):
             elif SIZE_SZ == 8:
                 fd = struct.unpack("<Q", mem)[0]
         except RuntimeError:
-            print(c_error + " ERROR: Invalid fb addr 0x%lx" % offset + c_none)
+            print_error("Invalid fastbin addr 0x{0:x}".format(offset))
             return
 
         print("%s%s%d%s%s0x%08lx%s%s%s0x%08lx%s%s" % \
@@ -1323,7 +1300,7 @@ def print_smallbins(inferior, sb_base, sb_num):
             elif SIZE_SZ == 8:
                 fd,bk = struct.unpack("<QQ", mem)
         except RuntimeError:
-            print(c_error + " ERROR: Invalid sb addr 0x%lx" % int(offset) + c_none)
+            print_error("Invalid smallbin addr 0x{0:x}".format(offset))
             return
 
         print("%s%s%02d%s%s0x%08lx%s%s%s0x%08lx%s0x%08lx%s%s" % \
@@ -1484,9 +1461,7 @@ class print_bin_layout(gdb.Command):
         "Specify an optional arena addr: print_bin_layout main_arena=0x12345"
 
         if len(arg) == 0:
-            sys.stdout.write(c_error)
-            print("Please specify the free bin to dump")
-            sys.stdout.write(c_none)
+            print_error("Please specify the free bin to dump")
             return
 
         try:
@@ -1498,27 +1473,19 @@ class print_bin_layout(gdb.Command):
                 for item in arg:
                     if item.find("main_arena") != -1:
                         if len(item) < 12:
-                            sys.stdout.write(c_error)
-                            print("Malformed main_arena parameter")
-                            sys.stdout.write(c_none)
+                            print_error("Malformed main_arena parameter")
                             return
                         else:
                             main_arena_address = int(item[11:],16)
         except RuntimeError:
-            sys.stdout.write(c_error)
-            print("No frame is currently selected.")
-            sys.stdout.write(c_none)
+            print_error("No frame is currently selected.")
             return
         except ValueError:
-            sys.stdout.write(c_error)
-            print("Debug glibc was not found.")
-            sys.stdout.write(c_none)
+            print_error("Debug glibc was not found.")
             return
 
         if main_arena_address == 0:
-            sys.stdout.write(c_error)
-            print("Invalid main_arena address (0)")
-            sys.stdout.write(c_none)
+            print_error("Invalid main_arena address (0)")
             return
 
         ar_ptr = malloc_state(main_arena_address)
@@ -1585,21 +1552,17 @@ class check_house_of_mind(gdb.Command):
             for item in arg:
                 if item.find("method") != -1:
                     if len(item) < 8:
-                        sys.stdout.write(c_error)
-                        print("Malformed method parameter")
-                        print("Please specify the House of Mind method to use:")
-                        print("house_of_mind method={unsortedbin, fastbin}")
-                        sys.stdout.write(c_none)
+                        print_error("Malformed method parameter")
+                        print_error("Please specify the House of Mind method to use:")
+                        print_error("house_of_mind method={unsortedbin, fastbin}")
                         return
                     else:
                         method = item[7:]
                 if item.find("p") != -1:
                     if len(item) < 11:
-                        sys.stdout.write(c_error)
-                        print("Malformed chunk parameter")
-                        print("Please specify the chunk address to use:")
-                        print("house_of_mind p=0x12345678")
-                        sys.stdout.write(c_none)
+                        print_error("Malformed chunk parameter")
+                        print_error("Please specify the chunk address to use:")
+                        print_error("house_of_mind p=0x12345678")
                         return
                     else:
                         p = int(item[2:],16)
@@ -1623,37 +1586,37 @@ class check_house_of_mind(gdb.Command):
         if p.address < gdb.parse_and_eval("(unsigned int)%d" % -chunksize(p)):
             print(" [*] size does not wrap")
         else:
-            print(c_error + " [_] ERROR: p > -size" + c_none)
+            print_error("p > -size")
             return
 
         if chunksize(p) >= MINSIZE:
             print(" [*] size is > minimum chunk size")
         else:
-            print(c_error + " [_] ERROR: chunksize(p) < MINSIZE" + c_none)
+            print_error("chunksize(p) < MINSIZE")
             return
 
         if chunksize(p) > get_max_fast():
             print(" [*] size is not in fastbin range")
         else:
-            print(c_error + " [_] ERROR: size is in fastbin range" + c_none)
+            print_error("size is in fastbin range")
             return
 
         if not chunk_is_mmapped(p):
             print(" [*] is_mmapped bit is not set")
         else:
-            print(c_error + " [_] ERROR: IS_MMAPPED bit is set" + c_none)
+            print_error("IS_MMAPPED bit is set")
             return
 
         if prev_inuse(p):
             print(" [*] prev_inuse bit is set")
         else:
-            print(c_error + " [_] ERROR: PREV_INUSE bit is not set, this will", end=' ')
-            print("trigger backward consolidation" + c_none)
+            print_error("PREV_INUSE bit is not set.")
+            print_error("This will trigger backward consolidation.")
 
         if chunk_non_main_arena(p):
             print(" [*] non_main_arena flag is set")
         else:
-            print(c_error + " [_] ERROR: p's non_main_arena flag is NOT set")
+            print_error("p's non_main_arena flag is NOT set")
             return
 
         print(c_none + "\nChecking struct heap_info")
@@ -1671,8 +1634,7 @@ class check_house_of_mind(gdb.Command):
             elif SIZE_SZ == 8:
                 ar_ptr = struct.unpack("<Q", mem)[0]
         except RuntimeError:
-            print(c_error + " [_] ERROR: Invalid heap_info address 0x%x" \
-                    % heap_for_ptr(p.address) + c_none)
+            print_error("Invalid heap_info address 0x{0:x}".format(heap_for_ptr(p.address)))
             return
 
         print(c_none + " [*] ar_ptr = " + c_value + "0x%x" % ar_ptr)
@@ -1682,8 +1644,7 @@ class check_house_of_mind(gdb.Command):
         try:
             mutex = inferior.read_memory(ar_ptr, SIZE_SZ)
         except RuntimeError:
-            print(c_error + " [_] ERROR: Invalid malloc_state address 0x%x" % \
-                    ar_ptr + c_none)
+            print_error("Invalid malloc_state address 0x{0:x}".format(ar_ptr))
             return
 
         av = malloc_state(ar_ptr)
@@ -1691,20 +1652,19 @@ class check_house_of_mind(gdb.Command):
         if av.mutex == 0:
             print(c_none + " [*] av->mutex is zero")
         else:
-            print(c_error + " [_] ERROR: av->mutex is not zero" + c_none)
+            print_error("av->mutex is not zero")
             return
 
         if p.address != av.top:
             print(c_none + " [*] p is not the top chunk")
         else:
-            print(c_error + " [_] ERROR: p is the top chunk" + c_none)
+            print_error("p is the top chunk")
             return
 
         if noncontiguous(av):
             print(c_none + " [*] noncontiguous_bit is set")
         elif contiguous(av):
-            print(c_error + \
-                " [_] ERROR: noncontiguous_bit is NOT set in av->flags" + c_none)
+            print_error("noncontiguous_bit is NOT set in av->flags")
             return
 
         print(" [*] bck = &av->bins[0] = " + c_value + "0x%x" % (ar_ptr+0x38))
@@ -1722,10 +1682,8 @@ class check_house_of_mind(gdb.Command):
         print(c_value + "0x%x" % fwd)
 
         if fwd != (ar_ptr+0x38):
-            print(c_none + " [!] fwd->bk (0x%x) != bck (0x%x)" % \
-                    (fwd, ar_ptr+0x38) + c_error)
-            print("     - ERROR: This will prevent this attack on glibc 2.11+", end=' ')
-            print(c_none)
+            print_error("fwd->bk != bck")
+            print_error("This will prevent this attack on glibc 2.11+")
 
         print(c_none + "\nChecking following chunks")
         nextchunk = chunk_at_offset(p, chunksize(p))
@@ -1733,38 +1691,31 @@ class check_house_of_mind(gdb.Command):
         if prev_inuse(nextchunk):
             print(c_none + " [*] prev_inuse of the next chunk is set")
         else:
-            print(c_error + " [_] PREV_INUSE bit of the next chunk is not set" \
-                    + c_none)
+            print_error("PREV_INUSE bit of the next chunk is not set")
             return
 
         if chunksize(nextchunk) > 2*SIZE_SZ:
             print(c_none + " [*] nextchunk size is > minimum size")
         else:
-            print(c_error + " [_] ERROR: nextchunk size (%d) < %d" % \
-                    (chunksize(nextchunk), 2*SIZE_SZ) + c_none)
+            print_error("nextchunk size ({0}) < {1}".format(chunksize(nextchunk),2*SIZE_SZ))
             return
 
         if chunksize(nextchunk) < av.system_mem:
             print(c_none + " [*] nextchunk size is < av->system_mem")
         else:
-            print(c_error + " [_] ERROR: nextchunk size (0x%x) >" % \
-                    chunksize(nextchunk), end=' ')
-            print("av->system_mem (0x%x)" % av.system_mem + c_none)
+            print_error("nextchunk size (0x{0:x}) > av->system_mem".format(chunksize(nextchunk)))
             return
 
         if nextchunk.address != av.top:
             print(c_none + " [*] nextchunk != av->top")
         else:
-            print(c_error + " [_] ERROR: nextchunk is av->top (0x%x)" % av.top \
-                    + c_none)
+            print_error("nextchunk is av->top")
             return
 
         if inuse_bit_at_offset(nextchunk, chunksize(nextchunk)):
             print(c_none + " [*] prev_inuse bit set on chunk after nextchunk")
         else:
-            print(c_error + " [_] ERROR: PREV_INUSE bit of chunk after", end=' ')
-            print("nextchunk (0x%x) is not set" % \
-                    (nextchunk.address + chunksize(nextchunk)) + c_none)
+            print_error("PREV_INUSE bit of chunk after nextchunk is not set")
             return
 
         print(c_header + "\np (0x%x) will be written to fwd->bk (0x%x)" \
@@ -1779,32 +1730,32 @@ class check_house_of_mind(gdb.Command):
         if p.address < gdb.parse_and_eval("(unsigned int)%d" % -chunksize(p)):
             print(" [*] size does not wrap")
         else:
-            print(c_error + " [_] ERROR: p > -size" + c_none)
+            print_error("p > -size")
             return
 
         if chunksize(p) >= MINSIZE:
             print(" [*] size is >= minimum chunk size")
         else:
-            print(c_error + " [_] ERROR: chunksize(p) < MINSIZE" + c_none)
+            print_error("chunksize(p) < MINSIZE")
             return
 
         if chunksize(p) < get_max_fast():
             print(" [*] size is in fastbin range")
         else:
-            print(c_error + " [_] ERROR: size is not in fastbin range" + c_none)
+            print_error("size is not in fastbin range")
             return
 
         if chunk_non_main_arena(p):
             print(" [*] non_main_arena flag is set")
         else:
-            print(c_error + " [_] ERROR: p's non_main_arena flag is NOT set")
+            print_error("p's non_main_arena flag is NOT set")
             return
 
         if prev_inuse(p):
             print(" [*] prev_inuse bit is set")
         else:
-            print(c_error + " [_] ERROR: PREV_INUSE bit is not set, this will", end=' ')
-            print("trigger backward consolidation" + c_none)
+            print_error("PREV_INUSE bit is not set")
+            print_error("This will trigger backward consolidation.")
 
         print(c_none + "\nChecking struct heap_info")
         print(c_none + " [*] struct heap_info = " \
@@ -1821,8 +1772,7 @@ class check_house_of_mind(gdb.Command):
             elif SIZE_SZ == 8:
                 ar_ptr = struct.unpack("<Q", mem)[0]
         except RuntimeError:
-            print(c_error + " [_] ERROR: Invalid heap_info address 0x%x" \
-                    % heap_for_ptr(p.address) + c_none)
+            print_error("Invalid heap_info address 0x{0:x}".format(heap_for_ptr(p.address)))
             return
 
         print(c_none + " [*] ar_ptr = " + c_value + "0x%x" % ar_ptr)
@@ -1832,8 +1782,7 @@ class check_house_of_mind(gdb.Command):
         try:
             mutex = inferior.read_memory(ar_ptr, SIZE_SZ)
         except RuntimeError:
-            print(c_error + " [_] ERROR: Invalid malloc_state address 0x%x" % \
-                    ar_ptr + c_none)
+            print_error("Invalid malloc_state address 0x{0:x}".format(ar_ptr))
             return
 
         av = malloc_state(ar_ptr)
@@ -1841,7 +1790,7 @@ class check_house_of_mind(gdb.Command):
         if av.mutex == 0:
             print(c_none + " [*] av->mutex is zero")
         else:
-            print(c_error + " [_] ERROR: av->mutex is not zero" + c_none)
+            print_error("av->mutex is not zero")
             return
 
         print(c_none + " [*] av->system_mem is 0x%x" % av.system_mem)
@@ -1853,15 +1802,13 @@ class check_house_of_mind(gdb.Command):
         if nextchunk.size > 2*SIZE_SZ:
             print(c_none + " [*] nextchunk size is > 2*SIZE_SZ")
         else:
-            print(c_error + " [_] ERROR: nextchunk size is <= 2*SIZE_SZ" +c_none)
+            print_error("nextchunk size is <= 2*SIZE_SZ")
             return
 
         if chunksize(nextchunk) < av.system_mem:
             print(c_none + " [*] nextchunk size is < av->system_mem")
         else:
-            print(c_error + " [_] ERROR: nextchunk size (0x%x) is >= " % \
-                    chunksize(nextchunk), end=' ')
-            print("av->system_mem (0x%x)" % (av.system_mem) + c_none)
+            print_error("nextchunk size is >= av->system_mem")
             return
 
         fb = ar_ptr + (2*SIZE_SZ) + (fastbin_index(p.size)*SIZE_SZ)
@@ -1876,5 +1823,4 @@ class check_house_of_mind(gdb.Command):
 heap()
 print_malloc_stats()
 print_bin_layout()
-check_house_of_mind()
 gdb.pretty_printers.append(pretty_print_heap_lookup)

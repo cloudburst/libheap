@@ -9,5 +9,5 @@ setup(name='libheap',
       url='https://github.com/cloudburst/libheap',
       license="MIT",
       keywords="ptmalloc gdb python glibc",
-      py_modules=['libheap'],
+      py_modules=['libheap', 'printutils'],
      )
