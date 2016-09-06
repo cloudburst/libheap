@@ -461,42 +461,42 @@ class malloc_chunk:
         if self.prev_size == 0 and self.size == 0:
             return ""
         elif self.fd == None and self.bk == None:
-            ret =  "%s%s%x%s%x%s" %                               \
-                    (c_title + "struct malloc_chunk {",           \
-                    c_none + "\nprev_size   = " + c_value + "0x", \
-                    self.prev_size,                               \
-                    c_none + "\nsize        = " + c_value + "0x", \
-                    self.size, c_none)
+            ret = color_title("struct malloc_chunk {")
+            ret += "\n{:11} = ".format("prev_size")
+            ret += color_value("0x{}".format(self.prev_size))
+            ret += "\n{:11} = ".format("size")
+            ret += color_value("0x{}".format(self.size))
 
             if self.data != None:
                 if SIZE_SZ == 4:
-                    ret += "%s%s%r" %                                       \
-                            ("\ndata        = " + c_value + str(self.data), \
-                            c_none + "\nraw         = " + c_value,          \
-                            struct.pack("<%dI"%len(self.data), *self.data))
+                    ret += "\n{:11} = ".format("data")
+                    ret += color_value("{}".format(self.data))
+                    ret += "\n{:11} = ".format("raw")
+                    ret += color_value("{}".format( \
+                            struct.pack("<%dI"%len(self.data), *self.data)))
                 elif SIZE_SZ == 8:
-                    ret += "%s%s%r" %                                       \
-                            ("\ndata        = " + c_value + str(self.data), \
-                            c_none + "\nraw         = " + c_value,          \
-                            struct.pack("<%dQ"%len(self.data), *self.data))
-                ret += c_none
-
+                    ret += "\n{:11} = ".format("data")
+                    ret += color_value("{}".format(self.data))
+                    ret += "\n{:11} = ".format("raw")
+                    ret += color_value("{}".format( \
+                            struct.pack("<%dQ"%len(self.data), *self.data)))
             return ret
         else:
-            return "%s%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" %           \
-                    (c_title + "struct malloc_chunk {",           \
-                    c_none + "\nprev_size   = " + c_value + "0x", \
-                    self.prev_size,                               \
-                    c_none + "\nsize        = " + c_value + "0x", \
-                    self.size,                                    \
-                    c_none + "\nfd          = " + c_value + "0x", \
-                    self.fd,                                      \
-                    c_none + "\nbk          = " + c_value + "0x", \
-                    self.bk,                                      \
-                    c_none + "\nfd_nextsize = " + c_value + "0x", \
-                    self.fd_nextsize,                             \
-                    c_none + "\nbk_nextsize = " + c_value + "0x", \
-                    self.bk_nextsize, c_none)
+            mc = color_title("struct malloc_chunk {")
+            mc += "\n{:11} = ".format("prev_size")
+            mc += color_value("0x{}".format(self.prev_size))
+            mc += "\n{:11} = ".format("size")
+            mc += color_value("0x{}".format(self.size))
+            mc += "\n{:11} = ".format("fd")
+            mc += color_value("0x{}".format(self.fd))
+            mc += "\n{:11} = ".format("bk")
+            mc += color_value("0x{}".format(self.bk))
+            mc += "\n{:11} = ".format("fd_nextsize")
+            mc += color_value("0x{}".format(self.fd_nextsize))
+            mc += "\n{:11} = ".format("bk_nextsize")
+            mc += color_value("0x{}".format(self.bk_nextsize))
+            return mc
+
 
 ################################################################################
 class malloc_state:
@@ -585,25 +585,28 @@ class malloc_state:
         inferior.write_memory(self.address, mem)
 
     def __str__(self):
-        return "%s%s%x%s%x%s%s%lx%s%lx%s%s%s%lx%s%lx%s%lx%s" %      \
-                (c_title + "struct malloc_state {",                 \
-                c_none + "\nmutex          = " + c_value + "0x",    \
-                self.mutex,                                         \
-                c_none + "\nflags          = " + c_value + "0x",    \
-                self.flags,                                         \
-                c_none + "\nfastbinsY      = " + c_value + "{...}", \
-                c_none + "\ntop            = " + c_value + "0x",    \
-                self.top,                                           \
-                c_none + "\nlast_remainder = " + c_value + "0x",    \
-                self.last_remainder,                                \
-                c_none + "\nbins           = " + c_value + "{...}", \
-                c_none + "\nbinmap         = " + c_value + "{...}", \
-                c_none + "\nnext           = " + c_value + "0x",    \
-                self.next,                                          \
-                c_none + "\nsystem_mem     = " + c_value + "0x",    \
-                self.system_mem,                                    \
-                c_none + "\nmax_system_mem = " + c_value + "0x",    \
-                self.max_system_mem, c_none)
+        ms = color_title("struct malloc_state {")
+        ms += "\n{:14} = ".format("mutex")
+        ms += color_value("0x{}".format(self.mutex))
+        ms += "\n{:14} = ".format("flags")
+        ms += color_value("0x{}".format(self.flags))
+        ms += "\n{:14} = ".format("fastbinsY")
+        ms += color_value("{}".format("{...}"))
+        ms += "\n{:14} = ".format("top")
+        ms += color_value("0x{}".format(self.top))
+        ms += "\n{:14} = ".format("last_remainder")
+        ms += color_value("0x{}".format(self.last_remainder))
+        ms += "\n{:14} = ".format("bins")
+        ms += color_value("{}".format("{...}"))
+        ms += "\n{:14} = ".format("binmap")
+        ms += color_value("{}".format("{...}"))
+        ms += "\n{:14} = ".format("next")
+        ms += color_value("0x{}".format(self.next))
+        ms += "\n{:14} = ".format("system_mem")
+        ms += color_value("0x{}".format(self.system_mem))
+        ms += "\n{:14} = ".format("max_system_mem")
+        ms += color_value("0x{}".format(self.max_system_mem))
+        return ms
 
 
 ################################################################################
@@ -683,36 +686,34 @@ class malloc_par:
             self.sbrk_base)       = struct.unpack("<5Q4I4Q", mem)
 
     def __str__(self):
-        return "%s%s%lx%s%lx%s%lx%s%x%s%x%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" % \
-                (c_title + "struct malloc_par {",                  \
-                c_none + "\ntrim_threshold   = " + c_value + "0x", \
-                self.trim_threshold,                               \
-                c_none + "\ntop_pad          = " + c_value + "0x", \
-                self.top_pad,                                      \
-                c_none + "\nmmap_threshold   = " + c_value + "0x", \
-                self.mmap_threshold,                               \
-                c_none + "\narena_test       = " + c_value + "0x", \
-                self.arena_test,                                   \
-                c_none + "\narena_max        = " + c_value + "0x", \
-                self.arena_max,                                    \
-                c_none + "\nn_mmaps          = " + c_value + "0x", \
-                self.n_mmaps,                                      \
-                c_none + "\nn_mmaps_max      = " + c_value + "0x", \
-                self.n_mmaps_max,                                  \
-                c_none + "\nmax_n_mmaps      = " + c_value + "0x", \
-                self.max_n_mmaps,                                  \
-                c_none + "\nno_dyn_threshold = " + c_value + "0x", \
-                self.no_dyn_threshold,                             \
-                c_none + "\nmmapped_mem      = " + c_value + "0x", \
-                self.mmapped_mem,                                  \
-                c_none + "\nmax_mmapped_mem  = " + c_value + "0x", \
-                self.max_mmapped_mem,                              \
-                c_none + "\nmax_total_mem    = " + c_value + "0x", \
-                self.max_total_mem,                                \
-                c_none + "\nsbrk_base        = " + c_value + "0x", \
-                self.sbrk_base,                                    \
-                c_none)
-
+        mp = color_title("struct malloc_par {")
+        mp += "\n{:16} = ".format("trim_threshold")
+        mp += color_value("0x{}".format(self.trim_threshold))
+        mp += "\n{:16} = ".format("top_pad")
+        mp += color_value("0x{}".format(self.top_pad))
+        mp += "\n{:16} = ".format("mmap_threshold")
+        mp += color_value("0x{}".format(self.mmap_threshold))
+        mp += "\n{:16} = ".format("arena_test")
+        mp += color_value("0x{}".format(self.arena_test))
+        mp += "\n{:16} = ".format("arena_max")
+        mp += color_value("0x{}".format(self.arena_max))
+        mp += "\n{:16} = ".format("n_mmaps")
+        mp += color_value("0x{}".format(self.n_mmaps))
+        mp += "\n{:16} = ".format("n_mmaps_max")
+        mp += color_value("0x{}".format(self.n_mmaps_max))
+        mp += "\n{:16} = ".format("max_n_mmaps")
+        mp += color_value("0x{}".format(self.max_n_mmaps))
+        mp += "\n{:16} = ".format("no_dyn_threshold")
+        mp += color_value("0x{}".format(self.no_dyn_threshold))
+        mp += "\n{:16} = ".format("mmapped_mem")
+        mp += color_value("0x{}".format(self.mmapped_mem))
+        mp += "\n{:16} = ".format("max_mmapped_mem")
+        mp += color_value("0x{}".format(self.max_mmapped_mem))
+        mp += "\n{:16} = ".format("max_total_mem")
+        mp += color_value("0x{}".format(self.max_total_mem))
+        mp += "\n{:16} = ".format("sbrk_base")
+        mp += color_value("0x{:x}".format(self.sbrk_base))
+        return mp
 
 
 ################################################################################

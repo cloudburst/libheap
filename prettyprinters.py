@@ -13,13 +13,17 @@ class malloc_par_printer:
         self.val = val
 
     def to_string(self):
-        mp = color_title("struct malloc_chunk {")
+        mp = color_title("struct malloc_par {")
         mp += "\n{:16} = ".format("trim_threshold")
         mp += color_value("0x{}".format(self.val['trim_threshold']))
         mp += "\n{:16} = ".format("top_pad")
         mp += color_value("0x{}".format(self.val['top_pad']))
         mp += "\n{:16} = ".format("mmap_threshold")
         mp += color_value("0x{}".format(self.val['mmap_threshold']))
+        mp += "\n{:16} = ".format("arena_test")
+        mp += color_value("0x{}".format(self.val['arena_test']))
+        mp += "\n{:16} = ".format("arena_max")
+        mp += color_value("0x{}".format(self.val['arena_max']))
         mp += "\n{:16} = ".format("n_mmaps")
         mp += color_value("0x{}".format(self.val['n_mmaps']))
         mp += "\n{:16} = ".format("n_mmaps_max")
@@ -35,7 +39,7 @@ class malloc_par_printer:
         mp += "\n{:16} = ".format("max_total_mem")
         mp += color_value("0x{}".format(self.val['max_total_mem']))
         mp += "\n{:16} = ".format("sbrk_base")
-        mp += color_value("{}".format(self.val['sbrk_base']))
+        mp += color_value("0x{}".format(self.val['sbrk_base']))
         return mp
 
 class malloc_state_printer:
