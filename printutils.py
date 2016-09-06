@@ -60,3 +60,17 @@ def print_error(s):
         error = colorize(error, color)
 
     print(error)
+
+def color_title(s):
+    if colors_enabled:
+        color = GREEN
+        return colorize(s, color)
+    else:
+        return s
+
+def color_value(s):
+    if colors_enabled:
+        color = BLUE
+        return colorize(s, color)
+    else:
+        return s

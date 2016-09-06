@@ -9,6 +9,7 @@ except ImportError:
 import sys
 import struct
 from printutils import *
+from prettyprinters import *
 
 # bash color support
 color_support = False
@@ -727,161 +728,6 @@ def top(ar_ptr):
 def heap_for_ptr(ptr):
     "find the heap and corresponding arena for a given ptr"
     return (ptr & ~(HEAP_MAX_SIZE-1))
-
-
-################################################################################
-# GDB PRETTY PRINTERS
-################################################################################
-
-class malloc_par_printer:
-    "pretty print the malloc parameters (mp_)"
-
-    def __init__(self, val):
-        self.val = val
-
-    def to_string(self):
-        return "%s%s%lx%s%lx%s%lx%s%x%s%x%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" % \
-                (c_title + "struct malloc_par {",                  \
-                c_none + "\ntrim_threshold   = " + c_value + "0x", \
-                self.val['trim_threshold'],                        \
-                c_none + "\ntop_pad          = " + c_value + "0x", \
-                self.val['top_pad'],                               \
-                c_none + "\nmmap_threshold   = " + c_value + "0x", \
-                self.val['mmap_threshold'],                        \
-                c_none + "\nn_mmaps          = " + c_value + "0x", \
-                self.val['n_mmaps'],                               \
-                c_none + "\nn_mmaps_max      = " + c_value + "0x", \
-                self.val['n_mmaps_max'],                           \
-                c_none + "\nmax_n_mmaps      = " + c_value + "0x", \
-                self.val['max_n_mmaps'],                           \
-                c_none + "\nno_dyn_threshold = " + c_value + "0x", \
-                self.val['no_dyn_threshold'],                      \
-                c_none + "\nmmapped_mem      = " + c_value + "0x", \
-                self.val['mmapped_mem'],                           \
-                c_none + "\nmax_mmapped_mem  = " + c_value + "0x", \
-                self.val['max_mmapped_mem'],                       \
-                c_none + "\nmax_total_mem    = " + c_value + "0x", \
-                self.val['max_total_mem'],                         \
-                c_none + "\nsbrk_base        = " + c_value + "0x", \
-                self.val['sbrk_base'],                             \
-                c_none)
-
-    def display_string(self):
-        return "string"
-
-################################################################################
-class malloc_state_printer:
-    "pretty print a struct malloc_state (ar_ptr)"
-
-    def __init__(self, val):
-        self.val = val
-
-    def to_string(self):
-        return "%s%s%x%s%x%s%s%lx%s%lx%s%s%s%lx%s%lx%s%lx%s" %      \
-                (c_title + "struct malloc_state {",                 \
-                c_none + "\nmutex          = " + c_value + "0x",    \
-                self.val['mutex'],                                  \
-                c_none + "\nflags          = " + c_value + "0x",    \
-                self.val['flags'],                                  \
-                c_none + "\nfastbinsY      = " + c_value + "{...}", \
-                c_none + "\ntop            = " + c_value + "0x",    \
-                self.val['top'],                                    \
-                c_none + "\nlast_remainder = " + c_value + "0x",    \
-                self.val['last_remainder'],                         \
-                c_none + "\nbins           = " + c_value + "{...}", \
-                c_none + "\nbinmap         = " + c_value + "{...}", \
-                c_none + "\nnext           = " + c_value + "0x",    \
-                self.val['next'],                                   \
-                c_none + "\nsystem_mem     = " + c_value + "0x",    \
-                self.val['system_mem'],                             \
-                c_none + "\nmax_system_mem = " + c_value + "0x",    \
-                self.val['max_system_mem'],                         \
-                c_none)
-
-    def display_string(self):
-        return "string"
-
-################################################################################
-class malloc_chunk_printer:
-    "pretty print a struct malloc_chunk"
-
-    def __init__(self, val):
-        self.val = val
-
-    def to_string(self):
-        return "%s%s%x%s%x%s%lx%s%lx%s%lx%s%lx%s" %           \
-                (c_title + "struct malloc_chunk {",           \
-                c_none + "\nprev_size   = " + c_value + "0x", \
-                self.val['prev_size'],                        \
-                c_none + "\nsize        = " + c_value + "0x", \
-                self.val['size'],                             \
-                c_none + "\nfd          = " + c_value + "0x", \
-                self.val['fd'],                               \
-                c_none + "\nbk          = " + c_value + "0x", \
-                self.val['bk'],                               \
-                c_none + "\nfd_nextsize = " + c_value + "0x", \
-                self.val['fd_nextsize'],                      \
-                c_none + "\nbk_nextsize = " + c_value + "0x", \
-                self.val['bk_nextsize'],                      \
-                c_none)
-
-    def display_string(self):
-        return "string"
-
-################################################################################
-class heap_info_printer:
-    "pretty print a struct heap_info"
-
-    def __init__(self, val):
-        self.val = val
-
-    def to_string(self):
-        return "%s%s%lx%s%lx%s%lx%s%lx%s" %                     \
-                (c_title + "struct heap_info {",                \
-                c_none + "\nar_ptr        = " + c_value + "0x", \
-                self.val['ar_ptr'],                             \
-                c_none + "\nprev          = " + c_value + "0x", \
-                self.val['prev'],                               \
-                c_none + "\nsize          = " + c_value + "0x", \
-                self.val['size'],                               \
-                c_none + "\nmprotect_size = " + c_value + "0x", \
-                self.val['mprotect_size'],                      \
-                c_none)
-
-    def display_string(self):
-        return "string"
-
-################################################################################
-def pretty_print_heap_lookup(val):
-    "Look-up and return a pretty-printer that can print val."
-
-    # Get the type.
-    type = val.type
-
-    # If it points to a reference, get the reference.
-    if type.code == gdb.TYPE_CODE_REF:
-        type = type.target()
-
-    # Get the unqualified type, stripped of typedefs.
-    type = type.unqualified().strip_typedefs()
-
-    # Get the type name.
-    typename = type.tag
-    if typename == None:
-        return None
-    elif typename == "malloc_par":
-        return malloc_par_printer(val)
-    elif typename == "malloc_state":
-        return malloc_state_printer(val)
-    elif typename == "malloc_chunk":
-        return malloc_chunk_printer(val)
-    elif typename == "_heap_info":
-        return heap_info_printer(val)
-    else:
-        print(typename)
-
-    # Cannot find a pretty printer.  Return None.
-    return None
 
 
 ################################################################################
@@ -1823,4 +1669,3 @@ class check_house_of_mind(gdb.Command):
 heap()
 print_malloc_stats()
 print_bin_layout()
-gdb.pretty_printers.append(pretty_print_heap_lookup)
