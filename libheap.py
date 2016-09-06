@@ -50,12 +50,18 @@ c_value  = c_blue_b
 def get_arch():
     return gdb.execute("maintenance info sections ?", to_string=True).strip().split()[-1:]
 
-_machine = get_arch()[0]
+try:
+    _machine = get_arch()[0]
+except IndexError:
+    _machine = ""
+    SIZE_SZ = 0
 
 if "elf64" in _machine:
     SIZE_SZ = 8
 elif "elf32" in _machine:
     SIZE_SZ = 4
+else:
+    SIZE_SZ = 0
 
 MIN_CHUNK_SIZE    = 4 * SIZE_SZ
 MALLOC_ALIGNMENT  = 2 * SIZE_SZ
@@ -315,6 +321,33 @@ def get_inferior():
     except AttributeError:
         print(c_error + "This gdb's python support is too old." + c_none)
         exit()
+
+def retrive_sizesz():
+    "Retrive the SIZE_SZ after binary loading finished"
+    global SIZE_SZ, MIN_CHUNK_SIZE, MALLOC_ALIGNMENT, MALLOC_ALIGN_MASK, MINSIZE, SMALLBIN_WIDTH, MIN_LARGE_SIZE, MAX_FAST_SIZE, NFASTBINS
+
+    try:
+        _machine = get_arch()[0]
+    except IndexError:
+        raise Exception("Retrive the SIZE_SZ failed.")
+
+    if "elf64" in _machine:
+        SIZE_SZ = 8
+    elif "elf32" in _machine:
+        SIZE_SZ = 4
+    else:
+        raise Exception("Retrive the SIZE_SZ failed.")
+
+    MIN_CHUNK_SIZE    = 4 * SIZE_SZ
+    MALLOC_ALIGNMENT  = 2 * SIZE_SZ
+    MALLOC_ALIGN_MASK = MALLOC_ALIGNMENT - 1
+    MINSIZE           = (MIN_CHUNK_SIZE+MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK
+
+    SMALLBIN_WIDTH = MALLOC_ALIGNMENT
+    MIN_LARGE_SIZE = (NSMALLBINS * SMALLBIN_WIDTH)
+
+    MAX_FAST_SIZE = (80 * SIZE_SZ / 4)
+    NFASTBINS     = (fastbin_index(request2size(MAX_FAST_SIZE)) + 1)
 
 
 ################################################################################
@@ -906,6 +939,9 @@ class print_malloc_stats(gdb.Command):
     def invoke(self, arg, from_tty):
         "Specify an optional arena addr: print_mstats main_arena=0x12345"
 
+        if SIZE_SZ == 0:
+            retrive_sizesz()
+
         try:
             mp         = gdb.selected_frame().read_var('mp_')
 
@@ -1020,6 +1056,9 @@ class heap(gdb.Command):
 
     def invoke(self, arg, from_tty):
         "Usage can be obtained via heap -h"
+
+        if SIZE_SZ == 0:
+            retrive_sizesz()
 
         inferior = get_inferior()
         if inferior == -1:
@@ -1483,6 +1522,9 @@ class print_bin_layout(gdb.Command):
     def invoke(self, arg, from_tty):
         "Specify an optional arena addr: print_bin_layout main_arena=0x12345"
 
+        if SIZE_SZ == 0:
+            retrive_sizesz()
+
         if len(arg) == 0:
             sys.stdout.write(c_error)
             print("Please specify the free bin to dump")
@@ -1571,6 +1613,9 @@ class check_house_of_mind(gdb.Command):
         check_house_of_mind method=unsortedbin p=0x12345678
         check_house_of_mind method=fastbin p=0x12345678
         """
+
+        if SIZE_SZ == 0:
+            retrive_sizesz()
 
         if arg.find("method") == -1:
             print("Please specify the House of Mind method to use:")
