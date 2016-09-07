@@ -11,40 +11,6 @@ import struct
 from printutils import *
 from prettyprinters import *
 
-# bash color support
-color_support = False
-if color_support:
-    c_red      = "\033[31m"
-    c_red_b    = "\033[01;31m"
-    c_green    = "\033[32m"
-    c_green_b  = "\033[01;32m"
-    c_yellow   = "\033[33m"
-    c_yellow_b = "\033[01;33m"
-    c_blue     = "\033[34m"
-    c_blue_b   = "\033[01;34m"
-    c_purple   = "\033[35m"
-    c_purple_b = "\033[01;35m"
-    c_teal     = "\033[36m"
-    c_teal_b   = "\033[01;36m"
-    c_none     = "\033[0m"
-else:
-    c_red      = ""
-    c_red_b    = ""
-    c_green    = ""
-    c_green_b  = ""
-    c_yellow   = ""
-    c_yellow_b = ""
-    c_blue     = ""
-    c_blue_b   = ""
-    c_purple   = ""
-    c_purple_b = ""
-    c_teal     = ""
-    c_teal_b   = ""
-    c_none     = ""
-c_title  = c_green_b
-c_header = c_yellow_b
-c_value  = c_blue_b
-
 ################################################################################
 # MALLOC CONSTANTS AND MACROS
 ################################################################################
@@ -1189,12 +1155,12 @@ def print_bins(inferior, fb_base, sb_base):
 
             if print_once:
                 print_once = False
-                print(c_header + "  fast bin %d   @ 0x%lx" % \
-                        (int(fb),int(p.fd)) + c_none)
-            print("    free chunk @ " + c_value + "0x%lx" % int(p.fd) + c_none + \
-                  " - size" + c_value, end=' ')
+                print_header("fast bin {} @ 0x{}".format(fb, int(p.fd)))
+            print("\n\tfree chunk @ ", end="")
+            print_value("0x{} ".format(int(p.fd)))
+            print("- size ", end="")
             p = malloc_chunk(p.fd, inuse=False)
-            print("0x%lx" % int(chunksize(p)) + c_none)
+            print_value("0x{} ".format(int(chunksize(p))))
 
     for i in range(1, NBINS):
         print_once = True
@@ -1202,27 +1168,29 @@ def print_bins(inferior, fb_base, sb_base):
         p = malloc_chunk(first(malloc_chunk(b, inuse=False)), inuse=False)
 
         while p.address != int(b):
+            print("")
             if print_once:
                 print_once = False
                 if i==1:
                     try:
-                        print(c_header + "  unsorted bin @ 0x%lx" % \
-                          int(b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ) + c_none)
+                        print_header("unsorted bin @ ")
+                        print_value("0x{}".format(int(\
+                                b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ)))
                     except:
-                        print(c_header + "  unsorted bin @ 0x%lx" % \
-                          int(b + 2*SIZE_SZ) + c_none)
+                        print_header("unsorted bin @ ")
+                        print_value("0x{}".format(int(b + 2*SIZE_SZ) + c_none))
                 else:
                     try:
-                        print(c_header + "  small bin %d @ 0x%lx" %  \
-                         (i,int(b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ)) + c_none)
+                        print_header("small bin {} @ ".format(i))
+                        print_value("0x{}".format(int(b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ)))
                     except:
-                        print(c_header + "  small bin %d @ 0x%lx" % \
-                         (i,int(b + 2*SIZE_SZ)) + c_none)
+                        print_header("small bin {} @ ".format(i))
+                        print_value("0x{}".format(int(b + 2*SIZE_SZ)))
 
-            print(c_none + "    free_chunk @ " + c_value \
-                  + "0x%lx " % int(p.address) + c_none        \
-                  + "- size " + c_value + "0x%lx" % int(chunksize(p)) + c_none)
-
+            print("\n\tfree chunk @ ",end="")
+            print_value("0x{} ".format(int(p.address)))
+            print("- size ",end="")
+            print_value("0x{}".format(int(chunksize(p))))
             p = malloc_chunk(first(p), inuse=False)
 
 
@@ -1231,14 +1199,14 @@ def print_flat_listing(ar_ptr, sbrk_base):
     "print a flat listing of an arena, modified from jp and arena.c"
 
     print_title("Heap Dump")
-    print("%s%14s%17s%15s%s" % (c_header, "ADDR", "SIZE", "STATUS", c_none))
-    print("sbrk_base " + c_value + "0x%lx" % int(sbrk_base))
+    print_header("\n{:>14}{:>17}{:>15}\n".format("ADDR", "SIZE", "STATUS"))
+    print("sbrk_base ", end="")
+    print("0x{:x}".format(int(sbrk_base)))
 
     p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
 
     while(1):
-        print("%schunk     %s0x%-14lx 0x%-10lx%s" % \
-                (c_none, c_value, int(p.address), int(chunksize(p)), c_none), end=' ')
+        print("chunk     0x{:x}{:>11}{:<8x}{:>3}".format(int(p.address),"0x",int(chunksize(p)),""),end="")
 
         if p.address == top(ar_ptr):
             print("(top)")
@@ -1248,11 +1216,13 @@ def print_flat_listing(ar_ptr, sbrk_base):
             break
 
         if inuse(p):
-            print("%s" % "(inuse)")
+            print("(inuse)")
         else:
             p = malloc_chunk(p.address, inuse=False)
-            print("(F) FD %s0x%lx%s BK %s0x%lx%s" % \
-                    (c_value, int(p.fd), c_none,c_value,int(p.bk),c_none), end=' ')
+            print("(F) FD ", end="")
+            print_value("0x{} ".format(int(p.fd)))
+            print("BK ", end="")
+            print_value("0x{} ".format(int(p.bk)))
 
             if ((p.fd == ar_ptr.last_remainder) \
             and (p.bk == ar_ptr.last_remainder) \
@@ -1265,8 +1235,8 @@ def print_flat_listing(ar_ptr, sbrk_base):
 
         p = malloc_chunk(next_chunk(p), inuse=True, read_data=False)
 
-    print(c_none + "sbrk_end  " + c_value \
-            + "0x%lx" % (sbrk_base + ar_ptr.max_system_mem) + c_none)
+    print("sbrk_end  ", end="")
+    print("0x{:x}".format(int(sbrk_base + ar_ptr.max_system_mem)), end="")
 
 
 ################################################################################
@@ -1349,21 +1319,22 @@ class print_bin_layout(gdb.Command):
         while p.address != int(b):
             if print_once:
                 print_once=False
-                print_str += "-->  " + c_value + "[bin %d]" % int(arg) + c_none
+                print_str += "-->  "
+                print_str += color_value("[bin {}]".format(int(arg)))
                 count += 1
 
-            print_str += "  <-->  " + c_value + "0x%lx" % int(p.address) + c_none
+            print_str += "  <-->  "
+            print_str += color_value("0x{}".format(int(p.address)))
             count += 1
-            #print_str += "  <-->  0x%lx" % p.address
             p = malloc_chunk(first(p), inuse=False)
 
         if len(print_str) != 0:
             print_str += "  <--"
             print(print_str)
-            print("%s%s%s" % ("|"," " * (len(print_str) - 2 - count*12),"|"))
-            print("%s" % ("-" * (len(print_str) - count*12)))
+            print("|{}|".format(" " * (len(print_str) - 2 - count*12)))
+            print("{}".format("-" * (len(print_str) - count*12)))
         else:
-            print("Bin %d empty." % int(arg))
+            print("Bin {} empty.".format(int(arg)))
 
         mutex_unlock(ar_ptr)
 
