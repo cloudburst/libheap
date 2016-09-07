@@ -1088,8 +1088,9 @@ def read_proc_maps(pid):
 def print_fastbins(inferior, fb_base, fb_num):
     "walk and print the fast bins"
 
-    print(c_title + "===================================", end=' ')
-    print("Fastbins ===================================\n" + c_none)
+    print_title("Fastbins")
+
+    pad_width = 32
 
     for fb in range(0,NFASTBINS):
         if fb_num != None:
@@ -1106,20 +1107,24 @@ def print_fastbins(inferior, fb_base, fb_num):
             print_error("Invalid fastbin addr 0x{0:x}".format(offset))
             return
 
-        print("%s%s%d%s%s0x%08lx%s%s%s0x%08lx%s%s" % \
-                (c_header,"[ fb  ",int(fb)," ] ",c_none,int(offset),\
-                 " -> ",c_value,"[ ",int(fd)," ]",c_none), end=' ')
+        print("")
+        print_header("[ fb {} ] ".format(fb))
+        print("{}{:x}{:>{width}}".format("0x", int(offset), "-> ", width=5), end="")
+        print_value("[ 0x{:x} ] ".format(int(fd)))
 
-        if fd == 0: #fastbin is empty
-            print("")
-        else:
+        if fd != 0: #fastbin is not empty
             fb_size = ((MIN_CHUNK_SIZE) +(MALLOC_ALIGNMENT)*fb)
-            print("(%d)" % fb_size)
+            print("({})".format(int(fb_size)))
+
             chunk = malloc_chunk(fd, inuse=False)
             while chunk.fd != 0:
-                if chunk.fd is None:   # could not read memory section
+                if chunk.fd is None:   
+                    # could not read memory section
                     break
-                print("%s%26s0x%08lx%s%s(%d)" % (c_value,"[ ",int(chunk.fd)," ] ",c_none, int(fb_size)))
+
+                print_value("{:>{width}}{:x}{}".format("[ 0x", int(chunk.fd), " ] ", width=pad_width))
+                print("({})".format(int(fb_size)), end="")
+
                 chunk = malloc_chunk(chunk.fd, inuse=False)
 
         if fb_num != None: #only print one fastbin
