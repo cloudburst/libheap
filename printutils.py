@@ -1,10 +1,11 @@
-# bash color support, taken from pwndbg
+from __future__ import print_function
 
 import re
 import sys
 
 colors_enabled = False
 
+# bash color support, taken from pwndbg
 NORMAL         = "\x1b[0m"
 BLACK          = "\x1b[30m"
 RED            = "\x1b[31m"
@@ -60,6 +61,23 @@ def print_error(s):
         error = colorize(error, color)
 
     print(error)
+
+def print_title(s):
+    width = 80
+    lwidth = (width-len(s))/2
+    rwidth = (width-len(s))/2
+    title = '{:=<{lwidth}}{}{:=<{rwidth}}'.format('',s,'',lwidth=lwidth,rwidth=rwidth)
+    print(color_title(title))
+
+def print_header(s):
+    if colors_enabled:
+        color = YELLOW
+        s = colorize(s, color)
+
+    print(s, end="")
+
+def print_value(s):
+    print(color_value(s))
 
 def color_title(s):
     if colors_enabled:

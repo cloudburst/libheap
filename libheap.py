@@ -779,10 +779,7 @@ class print_malloc_stats(gdb.Command):
             ar_ptr = malloc_state(main_arena_address)
             mutex_lock(ar_ptr)
 
-            sys.stdout.write(c_title)
-            print("=================================", end=' ')
-            print("Malloc Stats =================================\n")
-            sys.stdout.write(c_none)
+            print_title("Malloc Stats")
 
             # account for top
             avail = chunksize(malloc_chunk(top(ar_ptr), inuse=True, \
@@ -813,16 +810,14 @@ class print_malloc_stats(gdb.Command):
                     avail += chunksize(p)
                     p = malloc_chunk(first(p), inuse=False)
 
-            sys.stdout.write(c_header)
-            print("Arena %d:" % arena)
-            sys.stdout.write(c_none)
-            print(c_none + "system bytes     = " + \
-                    c_value + "0x%x" % ar_ptr.system_mem)
-            print(c_none + "in use bytes     = " + \
-                    c_value + "0x%x\n" % (ar_ptr.system_mem - avail))
+            print_header("Arena {}:\n".format(arena))
+            print("{:16} = ".format("system bytes"), end='')
+            print_value("0x{}".format(ar_ptr.max_system_mem))
+            print("{:16} = ".format("in use bytes"), end='')
+            print_value("0x{}".format(ar_ptr.max_system_mem - avail))
 
-            system_b += ar_ptr.system_mem
-            in_use_b += (ar_ptr.system_mem - avail)
+            system_b += ar_ptr.max_system_mem
+            in_use_b += (ar_ptr.max_system_mem - avail)
 
             mutex_unlock(ar_ptr)
             if ar_ptr.next == main_arena_address:
@@ -831,15 +826,17 @@ class print_malloc_stats(gdb.Command):
                 ar_ptr = malloc_state(ar_ptr.next)
                 arena += 1
 
-        print(c_header + "Total (including mmap):")
-        print(c_none + "system bytes     = " + c_value + "0x%x" % system_b)
-        print(c_none + "in use bytes     = " + c_value + "0x%x" % in_use_b)
-        print(c_none + "max system bytes = " + \
-                c_value + "0x%x" % mp['max_total_mem'])
-        print(c_none + "max mmap regions = " + \
-                c_value + "0x%x" % mp['max_n_mmaps'])
-        print(c_none + "max mmap bytes   = " + \
-                c_value + "0x%lx" % mp['max_mmapped_mem'] + c_none)
+        print_header("\nTotal (including mmap):\n")
+        print("{:16} = ".format("system bytes"), end='')
+        print_value("0x{}".format(system_b))
+        print("{:16} = ".format("in use bytes"), end='')
+        print_value("0x{}".format(in_use_b))
+        print("{:16} = ".format("max system bytes"), end='')
+        print_value("0x{}".format(mp['max_total_mem']))
+        print("{:16} = ".format("max mmap regions"), end='')
+        print_value("0x{}".format(mp['max_n_mmaps']))
+        print("{:16} = ".format("max mmap bytes"), end='')
+        print_value("0x{}".format(mp['max_mmapped_mem']))
 
 
 ################################################################################
