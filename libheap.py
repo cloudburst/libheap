@@ -1135,8 +1135,9 @@ def print_fastbins(inferior, fb_base, fb_num):
 def print_smallbins(inferior, sb_base, sb_num):
     "walk and print the small bins"
 
-    print(c_title + "===================================", end=' ')
-    print("Smallbins ==================================\n" + c_none)
+    print_title("Smallbins")
+
+    pad_width = 33
 
     for sb in range(2,NBINS+2,2):
         if sb_num != None and sb_num!=0:
@@ -1153,20 +1154,19 @@ def print_smallbins(inferior, sb_base, sb_num):
             print_error("Invalid smallbin addr 0x{0:x}".format(offset))
             return
 
-        print("%s%s%02d%s%s0x%08lx%s%s%s0x%08lx%s0x%08lx%s%s" % \
-                            (c_header,"[ sb ",int(sb/2)," ] ",c_none,int(offset), \
-                            " -> ",c_value,"[ ", int(fd), " | ", int(bk), " ] ",  \
-                            c_none))
+        print("")
+        print_header("[ sb {:02} ] ".format(int(sb/2)))
+        print("{}{:x}{:>{width}}".format("0x", int(offset), "-> ", width=5), end="")
+        print_value("[ 0x{:x} | 0x{:x} ] ".format(int(fd), int(bk)))
 
         while (1):
             if fd == (offset-2*SIZE_SZ):
                 break
 
             chunk = malloc_chunk(fd, inuse=False)
-            print("%s%26s0x%08lx%s0x%08lx%s%s" % \
-                    (c_value,"[ ",int(chunk.fd)," | ",int(chunk.bk)," ] ",c_none), end=' ')
-            print("(%d)" % chunksize(chunk))
-
+            print("")
+            print_value("{:>{width}}{:x} | 0x{:x} ] ".format("[ 0x", int(chunk.fd), int(chunk.bk), width=pad_width))
+            print("({})".format(int(chunksize(chunk))), end="")
             fd = chunk.fd
 
         if sb_num != None: #only print one smallbin
@@ -1177,8 +1177,7 @@ def print_smallbins(inferior, sb_base, sb_num):
 def print_bins(inferior, fb_base, sb_base):
     "walk and print the nonempty free bins, modified from jp"
 
-    print(c_title + "==================================", end=' ')
-    print("Heap Dump ===================================\n" + c_none)
+    print_title("Heap Dump")
 
     for fb in range(0,NFASTBINS):
         print_once = True
@@ -1231,8 +1230,7 @@ def print_bins(inferior, fb_base, sb_base):
 def print_flat_listing(ar_ptr, sbrk_base):
     "print a flat listing of an arena, modified from jp and arena.c"
 
-    print(c_title + "==================================", end=' ')
-    print("Heap Dump ===================================\n" + c_none)
+    print_title("Heap Dump")
     print("%s%14s%17s%15s%s" % (c_header, "ADDR", "SIZE", "STATUS", c_none))
     print("sbrk_base " + c_value + "0x%lx" % int(sbrk_base))
 
@@ -1275,8 +1273,7 @@ def print_flat_listing(ar_ptr, sbrk_base):
 def print_compact_listing(ar_ptr, sbrk_base):
     "print a compact layout of the heap, modified from jp"
 
-    print(c_title + "==================================", end=' ')
-    print("Heap Dump ===================================" + c_none)
+    print_title("Heap Dump")
     p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
 
     while(1):
@@ -1341,10 +1338,7 @@ class print_bin_layout(gdb.Command):
         ar_ptr = malloc_state(main_arena_address)
         mutex_lock(ar_ptr)
 
-        sys.stdout.write(c_title)
-        print("=================================", end=' ')
-        print("Bin Layout ===================================\n")
-        sys.stdout.write(c_none)
+        print_title("Bin Layout")
 
         b = bin_at(ar_ptr, int(arg))
         p = malloc_chunk(first(malloc_chunk(b, inuse=False)), inuse=False)
