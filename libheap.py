@@ -854,22 +854,22 @@ class heap(gdb.Command):
             return
 
         if arg.find("-h") != -1:
-            print(c_title + "==============================", end=' ')
-            print("Heap Dump Help ==================================\n" + c_none)
-
-            print(c_title + "Options:\n" + c_none)
-            print(c_header + "  -a 0x1234" + c_none \
-                    + "\tSpecify an arena address")
-            print(c_header + "  -b" + c_none + \
-                    "\t\tPrint compact bin listing (only free chunks)")
-            print(c_header + "  -c" + c_none + \
-                    "\t\tPrint compact arena listing (all chunks)")
-            print(c_header + "  -f [#]" + c_none + \
-                    "\tPrint all fast bins, or only a single fast bin")
-            print(c_header + "  -l" + c_none + \
-                    "\t\tPrint a flat listing of all chunks in an arena")
-            print(c_header + "  -s [#]" + c_none + \
-                    "\tPrint all small bins, or only a single small bin\n")
+            print_title("Heap Dump Help")
+            print("")
+            print_header("Options:")
+            print("\n")
+            print_header("{:<12}".format("-a 0x1234"))
+            print("Specify an arena address")
+            print_header("{:<12}".format("-b"))
+            print("Print compact bin listing (only free chunks)")
+            print_header("{:<12}".format("-c"))
+            print("Print compact arena listing (all chunks)")
+            print_header("{:<12}".format("-l"))
+            print("Print a flat listing of all chunks in an arena")
+            print_header("{:<12}".format("-f [#]"))
+            print("Print all fast bins, or only a single fast bin")
+            print_header("{:<12}".format("-s [#]"))
+            print("Print all small bins, or only a single small bin")
             return
 
         a_found = f_found = s_found = p_fb = p_sb = p_b = p_l = p_c = 0
@@ -953,22 +953,23 @@ class heap(gdb.Command):
                 print_error("Nothing was found at 0x{0:x}".format(ar_ptr.address))
                 return
 
-            print(c_title + "==================================", end=' ')
-            print("Heap Dump ===================================\n" + c_none)
+            print_title("Heap Dump")
+            print_header("\nArena(s) found:\n")
 
-            print(c_title + "Arena(s) found:" + c_none)
-            try: #arena address obtained via read_var
-                print("\t arena @ 0x%x" % \
-                        int(ar_ptr.address.cast(gdb.lookup_type("unsigned long"))))
-            except: #arena address obtained via -a
-                print("\t arena @ 0x%x" % int(ar_ptr.address))
+            try: 
+                #arena address obtained via read_var
+                print("\t arena @ 0x{}".format(
+                        int(ar_ptr.address.cast(gdb.lookup_type("unsigned long")))))
+            except: 
+                #arena address obtained via -a
+                print("\t arena @ 0x{}".format(int(ar_ptr.address)))
 
             if ar_ptr.address != ar_ptr.next:
                 #we have more than one arena
 
                 curr_arena = malloc_state(ar_ptr.next)
                 while (ar_ptr.address != curr_arena.address):
-                    print("\t arena @ 0x%x" % int(curr_arena.address))
+                    print("\t arena @ 0x{}".format(int(curr_arena.address)))
                     curr_arena = malloc_state(curr_arena.next)
 
                     if curr_arena.address == 0:
