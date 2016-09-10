@@ -8,6 +8,7 @@ except ImportError:
 
 import sys
 import struct
+from functools import wraps
 from printutils import *
 from prettyprinters import *
 
@@ -291,6 +292,22 @@ def get_inferior():
     except AttributeError:
         print_error("This gdb's python support is too old.")
         exit()
+
+def has_inferior(f):
+    "decorator to make sure we have an inferior to operate on"
+
+    @wraps(f)
+    def with_inferior(*args, **kwargs):
+        inferior = get_inferior()
+        if inferior != -1:
+            if (inferior.pid != 0) and (inferior.pid is not None):
+                return f(*args, **kwargs)
+            else:
+                print_error("No debugee could be found.  Attach or start a program.")
+                exit()
+        else:
+            exit()
+    return with_inferior
 
 def retrieve_sizesz():
     "Retrieve the SIZE_SZ after binary loading finished, this allows import within .gdbinit"
@@ -858,6 +875,7 @@ class heap(gdb.Command):
     def __init__(self):
         super(heap, self).__init__("heap", gdb.COMMAND_DATA, gdb.COMPLETE_NONE)
 
+    @has_inferior
     def invoke(self, arg, from_tty):
         "Usage can be obtained via heap -h"
 
@@ -865,8 +883,6 @@ class heap(gdb.Command):
             retrieve_sizesz()
 
         inferior = get_inferior()
-        if inferior == -1:
-            return
 
         if arg.find("-h") != -1:
             print_title("Heap Dump Help")
