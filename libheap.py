@@ -292,21 +292,21 @@ def get_inferior():
         print_error("This gdb's python support is too old.")
         exit()
 
-def retrive_sizesz():
-    "Retrive the SIZE_SZ after binary loading finished"
+def retrieve_sizesz():
+    "Retrieve the SIZE_SZ after binary loading finished, this allows import within .gdbinit"
     global SIZE_SZ, MIN_CHUNK_SIZE, MALLOC_ALIGNMENT, MALLOC_ALIGN_MASK, MINSIZE, SMALLBIN_WIDTH, MIN_LARGE_SIZE, MAX_FAST_SIZE, NFASTBINS
 
     try:
         _machine = get_arch()[0]
     except IndexError:
-        raise Exception("Retrive the SIZE_SZ failed.")
+        raise Exception("Retrieving the SIZE_SZ failed.")
 
     if "elf64" in _machine:
         SIZE_SZ = 8
     elif "elf32" in _machine:
         SIZE_SZ = 4
     else:
-        raise Exception("Retrive the SIZE_SZ failed.")
+        raise Exception("Retrieving the SIZE_SZ failed.")
 
     MIN_CHUNK_SIZE    = 4 * SIZE_SZ
     MALLOC_ALIGNMENT  = 2 * SIZE_SZ
@@ -755,7 +755,7 @@ class print_malloc_stats(gdb.Command):
         "Specify an optional arena addr: print_mstats main_arena=0x12345"
 
         if SIZE_SZ == 0:
-            retrive_sizesz()
+            retrieve_sizesz()
 
         try:
             mp         = gdb.selected_frame().read_var('mp_')
@@ -862,7 +862,7 @@ class heap(gdb.Command):
         "Usage can be obtained via heap -h"
 
         if SIZE_SZ == 0:
-            retrive_sizesz()
+            retrieve_sizesz()
 
         inferior = get_inferior()
         if inferior == -1:
@@ -1327,7 +1327,7 @@ class print_bin_layout(gdb.Command):
         "Specify an optional arena addr: print_bin_layout main_arena=0x12345"
 
         if SIZE_SZ == 0:
-            retrive_sizesz()
+            retrieve_sizesz()
 
         if len(arg) == 0:
             print_error("Please specify the free bin to dump")
