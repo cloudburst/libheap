@@ -18,12 +18,18 @@ from prettyprinters import *
 def get_arch():
     return gdb.execute("maintenance info sections ?", to_string=True).strip().split()[-1:]
 
-_machine = get_arch()[0]
+try:
+    _machine = get_arch()[0]
+except IndexError:
+    _machine = ""
+    SIZE_SZ = 0
 
 if "elf64" in _machine:
     SIZE_SZ = 8
 elif "elf32" in _machine:
     SIZE_SZ = 4
+else:
+    SIZE_SZ = 0
 
 MIN_CHUNK_SIZE    = 4 * SIZE_SZ
 MALLOC_ALIGNMENT  = 2 * SIZE_SZ
@@ -285,6 +291,33 @@ def get_inferior():
     except AttributeError:
         print_error("This gdb's python support is too old.")
         exit()
+
+def retrive_sizesz():
+    "Retrive the SIZE_SZ after binary loading finished"
+    global SIZE_SZ, MIN_CHUNK_SIZE, MALLOC_ALIGNMENT, MALLOC_ALIGN_MASK, MINSIZE, SMALLBIN_WIDTH, MIN_LARGE_SIZE, MAX_FAST_SIZE, NFASTBINS
+
+    try:
+        _machine = get_arch()[0]
+    except IndexError:
+        raise Exception("Retrive the SIZE_SZ failed.")
+
+    if "elf64" in _machine:
+        SIZE_SZ = 8
+    elif "elf32" in _machine:
+        SIZE_SZ = 4
+    else:
+        raise Exception("Retrive the SIZE_SZ failed.")
+
+    MIN_CHUNK_SIZE    = 4 * SIZE_SZ
+    MALLOC_ALIGNMENT  = 2 * SIZE_SZ
+    MALLOC_ALIGN_MASK = MALLOC_ALIGNMENT - 1
+    MINSIZE           = (MIN_CHUNK_SIZE+MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK
+
+    SMALLBIN_WIDTH = MALLOC_ALIGNMENT
+    MIN_LARGE_SIZE = (NSMALLBINS * SMALLBIN_WIDTH)
+
+    MAX_FAST_SIZE = (80 * SIZE_SZ / 4)
+    NFASTBINS     = (fastbin_index(request2size(MAX_FAST_SIZE)) + 1)
 
 
 ################################################################################
@@ -651,6 +684,16 @@ class malloc_par:
             self.max_total_mem,   \
             self.sbrk_base)       = struct.unpack("<5Q4I4Q", mem)
 
+        # work around for sbrk_base
+        # if we cannot get sbrk_base from mp_, we can read the heap base from vmmap.
+        if self.sbrk_base == 0:
+            pid, task_id, thread_id = gdb.selected_thread().ptid
+            maps_data = open("/proc/%d/task/%d/maps" % (pid, task_id)).readlines()
+            for line in maps_data:
+                if any(x.strip() == '[heap]' for x in line.split(' ')):
+                    self.sbrk_base = int(line.split(' ')[0].split('-')[0], 16)
+                    break
+
     def __str__(self):
         mp = color_title("struct malloc_par {")
         mp += "\n{:16} = ".format("trim_threshold")
@@ -710,6 +753,9 @@ class print_malloc_stats(gdb.Command):
 
     def invoke(self, arg, from_tty):
         "Specify an optional arena addr: print_mstats main_arena=0x12345"
+
+        if SIZE_SZ == 0:
+            retrive_sizesz()
 
         try:
             mp         = gdb.selected_frame().read_var('mp_')
@@ -814,6 +860,9 @@ class heap(gdb.Command):
 
     def invoke(self, arg, from_tty):
         "Usage can be obtained via heap -h"
+
+        if SIZE_SZ == 0:
+            retrive_sizesz()
 
         inferior = get_inferior()
         if inferior == -1:
@@ -1276,6 +1325,9 @@ class print_bin_layout(gdb.Command):
 
     def invoke(self, arg, from_tty):
         "Specify an optional arena addr: print_bin_layout main_arena=0x12345"
+
+        if SIZE_SZ == 0:
+            retrive_sizesz()
 
         if len(arg) == 0:
             print_error("Please specify the free bin to dump")
