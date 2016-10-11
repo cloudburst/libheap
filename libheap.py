@@ -375,7 +375,7 @@ class malloc_chunk:
                 print_error("Invalid address specified.")
                 return None
             except RuntimeError:
-                print_error("Could not read address 0x{0:x}".format(addr))
+                print_error("Could not read address {0:#x}".format(addr))
                 return None
         else:
             # a string of raw memory was provided
@@ -414,7 +414,7 @@ class malloc_chunk:
                         print_error("Invalid address specified.")
                         return None
                     except RuntimeError:
-                        print_error("Could not read address 0x{0:x}".format(addr))
+                        print_error("Could not read address {0:#x}".format(addr))
                         return None
 
                 real_size = (real_size - SIZE_SZ) / SIZE_SZ
@@ -479,9 +479,9 @@ class malloc_chunk:
         elif self.fd == None and self.bk == None:
             ret = color_title("struct malloc_chunk {")
             ret += "\n{:11} = ".format("prev_size")
-            ret += color_value("0x{}".format(self.prev_size))
+            ret += color_value("{:#x}".format(self.prev_size))
             ret += "\n{:11} = ".format("size")
-            ret += color_value("0x{}".format(self.size))
+            ret += color_value("{:#x}".format(self.size))
 
             if self.data != None:
                 if SIZE_SZ == 4:
@@ -500,17 +500,17 @@ class malloc_chunk:
         else:
             mc = color_title("struct malloc_chunk {")
             mc += "\n{:11} = ".format("prev_size")
-            mc += color_value("0x{}".format(self.prev_size))
+            mc += color_value("{:#x}".format(self.prev_size))
             mc += "\n{:11} = ".format("size")
-            mc += color_value("0x{}".format(self.size))
+            mc += color_value("{:#x}".format(self.size))
             mc += "\n{:11} = ".format("fd")
-            mc += color_value("0x{}".format(self.fd))
+            mc += color_value("{:#x}".format(self.fd))
             mc += "\n{:11} = ".format("bk")
-            mc += color_value("0x{}".format(self.bk))
+            mc += color_value("{:#x}".format(self.bk))
             mc += "\n{:11} = ".format("fd_nextsize")
-            mc += color_value("0x{}".format(self.fd_nextsize))
+            mc += color_value("{:#x}".format(self.fd_nextsize))
             mc += "\n{:11} = ".format("bk_nextsize")
-            mc += color_value("0x{}".format(self.bk_nextsize))
+            mc += color_value("{:#x}".format(self.bk_nextsize))
             return mc
 
 
@@ -555,7 +555,7 @@ class malloc_state:
                 print_error("Invalid address specified.")
                 return None
             except RuntimeError:
-                print_error("Could not read address 0x{0:x}".format(addr))
+                print_error("Could not read address {0:#x}".format(addr))
                 return None
 
         if SIZE_SZ == 4:
@@ -603,25 +603,25 @@ class malloc_state:
     def __str__(self):
         ms = color_title("struct malloc_state {")
         ms += "\n{:14} = ".format("mutex")
-        ms += color_value("0x{}".format(self.mutex))
+        ms += color_value("{:#x}".format(self.mutex))
         ms += "\n{:14} = ".format("flags")
-        ms += color_value("0x{}".format(self.flags))
+        ms += color_value("{:#x}".format(self.flags))
         ms += "\n{:14} = ".format("fastbinsY")
         ms += color_value("{}".format("{...}"))
         ms += "\n{:14} = ".format("top")
-        ms += color_value("0x{}".format(self.top))
+        ms += color_value("{:#x}".format(self.top))
         ms += "\n{:14} = ".format("last_remainder")
-        ms += color_value("0x{}".format(self.last_remainder))
+        ms += color_value("{:#x}".format(self.last_remainder))
         ms += "\n{:14} = ".format("bins")
         ms += color_value("{}".format("{...}"))
         ms += "\n{:14} = ".format("binmap")
         ms += color_value("{}".format("{...}"))
         ms += "\n{:14} = ".format("next")
-        ms += color_value("0x{}".format(self.next))
+        ms += color_value("{:#x}".format(self.next))
         ms += "\n{:14} = ".format("system_mem")
-        ms += color_value("0x{}".format(self.system_mem))
+        ms += color_value("{:#x}".format(self.system_mem))
         ms += "\n{:14} = ".format("max_system_mem")
-        ms += color_value("0x{}".format(self.max_system_mem))
+        ms += color_value("{:#x}".format(self.max_system_mem))
         return ms
 
 
@@ -669,7 +669,7 @@ class malloc_par:
                 print_error("Invalid address specified.")
                 return None
             except RuntimeError:
-                print_error("Could not read address 0x{0:x}".format(addr))
+                print_error("Could not read address {0:#x}".format(addr))
                 return None
 
         if SIZE_SZ == 4:
@@ -714,31 +714,31 @@ class malloc_par:
     def __str__(self):
         mp = color_title("struct malloc_par {")
         mp += "\n{:16} = ".format("trim_threshold")
-        mp += color_value("0x{}".format(self.trim_threshold))
+        mp += color_value("{:#x}".format(self.trim_threshold))
         mp += "\n{:16} = ".format("top_pad")
-        mp += color_value("0x{}".format(self.top_pad))
+        mp += color_value("{:#x}".format(self.top_pad))
         mp += "\n{:16} = ".format("mmap_threshold")
-        mp += color_value("0x{}".format(self.mmap_threshold))
+        mp += color_value("{:#x}".format(self.mmap_threshold))
         mp += "\n{:16} = ".format("arena_test")
-        mp += color_value("0x{}".format(self.arena_test))
+        mp += color_value("{:#x}".format(self.arena_test))
         mp += "\n{:16} = ".format("arena_max")
-        mp += color_value("0x{}".format(self.arena_max))
+        mp += color_value("{:#x}".format(self.arena_max))
         mp += "\n{:16} = ".format("n_mmaps")
-        mp += color_value("0x{}".format(self.n_mmaps))
+        mp += color_value("{:#x}".format(self.n_mmaps))
         mp += "\n{:16} = ".format("n_mmaps_max")
-        mp += color_value("0x{}".format(self.n_mmaps_max))
+        mp += color_value("{:#x}".format(self.n_mmaps_max))
         mp += "\n{:16} = ".format("max_n_mmaps")
-        mp += color_value("0x{}".format(self.max_n_mmaps))
+        mp += color_value("{:#x}".format(self.max_n_mmaps))
         mp += "\n{:16} = ".format("no_dyn_threshold")
-        mp += color_value("0x{}".format(self.no_dyn_threshold))
+        mp += color_value("{:#x}".format(self.no_dyn_threshold))
         mp += "\n{:16} = ".format("mmapped_mem")
-        mp += color_value("0x{}".format(self.mmapped_mem))
+        mp += color_value("{:#x}".format(self.mmapped_mem))
         mp += "\n{:16} = ".format("max_mmapped_mem")
-        mp += color_value("0x{}".format(self.max_mmapped_mem))
+        mp += color_value("{:#x}".format(self.max_mmapped_mem))
         mp += "\n{:16} = ".format("max_total_mem")
-        mp += color_value("0x{}".format(self.max_total_mem))
+        mp += color_value("{:#x}".format(self.max_total_mem))
         mp += "\n{:16} = ".format("sbrk_base")
-        mp += color_value("0x{:x}".format(self.sbrk_base))
+        mp += color_value("{:#x}".format(self.sbrk_base))
         return mp
 
 
@@ -841,9 +841,9 @@ class print_malloc_stats(gdb.Command):
 
             print_header("Arena {}:\n".format(arena))
             print("{:16} = ".format("system bytes"), end='')
-            print_value("0x{}".format(ar_ptr.max_system_mem))
+            print_value("{:#x}".format(ar_ptr.max_system_mem))
             print("{:16} = ".format("in use bytes"), end='')
-            print_value("0x{}".format(ar_ptr.max_system_mem - avail))
+            print_value("{:#x}".format(ar_ptr.max_system_mem - avail))
 
             system_b += ar_ptr.max_system_mem
             in_use_b += (ar_ptr.max_system_mem - avail)
@@ -857,15 +857,15 @@ class print_malloc_stats(gdb.Command):
 
         print_header("\nTotal (including mmap):\n")
         print("{:16} = ".format("system bytes"), end='')
-        print_value("0x{}".format(system_b))
+        print_value("{:#x}".format(system_b))
         print("{:16} = ".format("in use bytes"), end='')
-        print_value("0x{}".format(in_use_b))
+        print_value("{:#x}".format(in_use_b))
         print("{:16} = ".format("max system bytes"), end='')
-        print_value("0x{}".format(mp['max_total_mem']))
+        print_value("{:#x}".format(mp['max_total_mem']))
         print("{:16} = ".format("max mmap regions"), end='')
-        print_value("0x{}".format(mp['max_n_mmaps']))
+        print_value("{:#x}".format(mp['max_n_mmaps']))
         print("{:16} = ".format("max mmap bytes"), end='')
-        print_value("0x{}".format(mp['max_mmapped_mem']))
+        print_value("{:#x}".format(mp['max_mmapped_mem']))
 
 
 ################################################################################
@@ -981,7 +981,7 @@ class heap(gdb.Command):
         if len(arg) == 0:
             if ar_ptr.next == 0:
                 print_error("No arenas could be correctly guessed.")
-                print_error("Nothing was found at 0x{0:x}".format(ar_ptr.address))
+                print_error("Nothing was found at {0:#x}".format(ar_ptr.address))
                 return
 
             print_title("Heap Dump")
@@ -989,18 +989,18 @@ class heap(gdb.Command):
 
             try: 
                 #arena address obtained via read_var
-                print("\t arena @ 0x{}".format(
+                print("\t arena @ {:#x}".format(
                         int(ar_ptr.address.cast(gdb.lookup_type("unsigned long")))))
             except: 
                 #arena address obtained via -a
-                print("\t arena @ 0x{}".format(int(ar_ptr.address)))
+                print("\t arena @ {:#x}".format(int(ar_ptr.address)))
 
             if ar_ptr.address != ar_ptr.next:
                 #we have more than one arena
 
                 curr_arena = malloc_state(ar_ptr.next)
                 while (ar_ptr.address != curr_arena.address):
-                    print("\t arena @ 0x{}".format(int(curr_arena.address)))
+                    print("\t arena @ {:#x}".format(int(curr_arena.address)))
                     curr_arena = malloc_state(curr_arena.next)
 
                     if curr_arena.address == 0:
@@ -1135,13 +1135,13 @@ def print_fastbins(inferior, fb_base, fb_num):
             elif SIZE_SZ == 8:
                 fd = struct.unpack("<Q", mem)[0]
         except RuntimeError:
-            print_error("Invalid fastbin addr 0x{0:x}".format(offset))
+            print_error("Invalid fastbin addr {0:#x}".format(offset))
             return
 
         print("")
         print_header("[ fb {} ] ".format(fb))
-        print("{}{:x}{:>{width}}".format("0x", int(offset), "-> ", width=5), end="")
-        print_value("[ 0x{:x} ] ".format(int(fd)))
+        print("{:#x}{:>{width}}".format(int(offset), "-> ", width=5), end="")
+        print_value("[ {:#x} ] ".format(int(fd)))
 
         if fd != 0: #fastbin is not empty
             fb_size = ((MIN_CHUNK_SIZE) +(MALLOC_ALIGNMENT)*fb)
@@ -1149,11 +1149,11 @@ def print_fastbins(inferior, fb_base, fb_num):
 
             chunk = malloc_chunk(fd, inuse=False)
             while chunk.fd != 0:
-                if chunk.fd is None:   
+                if chunk.fd is None:
                     # could not read memory section
                     break
 
-                print_value("{:>{width}}{:x}{}".format("[ 0x", int(chunk.fd), " ] ", width=pad_width))
+                print_value("{:>{width}}{:#x}{}".format("[ ", int(chunk.fd), " ] ", width=pad_width))
                 print("({})".format(int(fb_size)), end="")
 
                 chunk = malloc_chunk(chunk.fd, inuse=False)
@@ -1182,13 +1182,13 @@ def print_smallbins(inferior, sb_base, sb_num):
             elif SIZE_SZ == 8:
                 fd,bk = struct.unpack("<QQ", mem)
         except RuntimeError:
-            print_error("Invalid smallbin addr 0x{0:x}".format(offset))
+            print_error("Invalid smallbin addr {0:#x}".format(offset))
             return
 
         print("")
         print_header("[ sb {:02} ] ".format(int(sb/2)))
-        print("{}{:x}{:>{width}}".format("0x", int(offset), "-> ", width=5), end="")
-        print_value("[ 0x{:x} | 0x{:x} ] ".format(int(fd), int(bk)))
+        print("{:#x}{:>{width}}".format(int(offset), "-> ", width=5), end="")
+        print_value("[ {:#x} | {:#x} ] ".format(int(fd), int(bk)))
 
         while (1):
             if fd == (offset-2*SIZE_SZ):
@@ -1196,7 +1196,7 @@ def print_smallbins(inferior, sb_base, sb_num):
 
             chunk = malloc_chunk(fd, inuse=False)
             print("")
-            print_value("{:>{width}}{:x} | 0x{:x} ] ".format("[ 0x", int(chunk.fd), int(chunk.bk), width=pad_width))
+            print_value("{:>{width}}{:#x} | {:#x} ] ".format("[ ", int(chunk.fd), int(chunk.bk), width=pad_width))
             print("({})".format(int(chunksize(chunk))), end="")
             fd = chunk.fd
 
@@ -1220,12 +1220,12 @@ def print_bins(inferior, fb_base, sb_base):
 
             if print_once:
                 print_once = False
-                print_header("fast bin {} @ 0x{}".format(fb, int(p.fd)))
+                print_header("fast bin {} @ {:#x}".format(fb, int(p.fd)))
             print("\n\tfree chunk @ ", end="")
-            print_value("0x{} ".format(int(p.fd)))
+            print_value("{:#x} ".format(int(p.fd)))
             print("- size ", end="")
             p = malloc_chunk(p.fd, inuse=False)
-            print_value("0x{} ".format(int(chunksize(p))))
+            print_value("{:#x} ".format(int(chunksize(p))))
 
     for i in range(1, NBINS):
         print_once = True
@@ -1239,23 +1239,23 @@ def print_bins(inferior, fb_base, sb_base):
                 if i==1:
                     try:
                         print_header("unsorted bin @ ")
-                        print_value("0x{}".format(int(\
+                        print_value("{:#x}".format(int(\
                                 b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ)))
                     except:
                         print_header("unsorted bin @ ")
-                        print_value("0x{}".format(int(b + 2*SIZE_SZ) + c_none))
+                        print_value("{:#x}".format(int(b + 2*SIZE_SZ) + c_none))
                 else:
                     try:
                         print_header("small bin {} @ ".format(i))
-                        print_value("0x{}".format(int(b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ)))
+                        print_value("{:#x}".format(int(b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ)))
                     except:
                         print_header("small bin {} @ ".format(i))
-                        print_value("0x{}".format(int(b + 2*SIZE_SZ)))
+                        print_value("{:#x}".format(int(b + 2*SIZE_SZ)))
 
             print("\n\tfree chunk @ ",end="")
-            print_value("0x{} ".format(int(p.address)))
+            print_value("{:#x} ".format(int(p.address)))
             print("- size ",end="")
-            print_value("0x{}".format(int(chunksize(p))))
+            print_value("{:#x}".format(int(chunksize(p))))
             p = malloc_chunk(first(p), inuse=False)
 
 
@@ -1266,12 +1266,12 @@ def print_flat_listing(ar_ptr, sbrk_base):
     print_title("Heap Dump")
     print_header("\n{:>14}{:>17}{:>15}\n".format("ADDR", "SIZE", "STATUS"))
     print("sbrk_base ", end="")
-    print("0x{:x}".format(int(sbrk_base)))
+    print("{:#x}".format(int(sbrk_base)))
 
     p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
 
     while(1):
-        print("chunk     0x{:x}{:>11}{:<8x}{:>3}".format(int(p.address),"0x",int(chunksize(p)),""),end="")
+        print("chunk     {:#x}{:>11}{:<8x}{:>3}".format(int(p.address),"0x",int(chunksize(p)),""),end="")
 
         if p.address == top(ar_ptr):
             print("(top)")
@@ -1285,9 +1285,9 @@ def print_flat_listing(ar_ptr, sbrk_base):
         else:
             p = malloc_chunk(p.address, inuse=False)
             print("(F) FD ", end="")
-            print_value("0x{} ".format(int(p.fd)))
+            print_value("{:#x} ".format(int(p.fd)))
             print("BK ", end="")
-            print_value("0x{} ".format(int(p.bk)))
+            print_value("{:#x} ".format(int(p.bk)))
 
             if ((p.fd == ar_ptr.last_remainder) \
             and (p.bk == ar_ptr.last_remainder) \
@@ -1301,7 +1301,7 @@ def print_flat_listing(ar_ptr, sbrk_base):
         p = malloc_chunk(next_chunk(p), inuse=True, read_data=False)
 
     print("sbrk_end  ", end="")
-    print("0x{:x}".format(int(sbrk_base + ar_ptr.max_system_mem)), end="")
+    print("{:#x}".format(int(sbrk_base + ar_ptr.max_system_mem)), end="")
 
 
 ################################################################################
@@ -1392,7 +1392,7 @@ class print_bin_layout(gdb.Command):
                 count += 1
 
             print_str += "  <-->  "
-            print_str += color_value("0x{}".format(int(p.address)))
+            print_str += color_value("{:#x}".format(int(p.address)))
             count += 1
             p = malloc_chunk(first(p), inuse=False)
 
