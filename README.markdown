@@ -26,7 +26,6 @@ Or:
 
 ### Libheap Installation
 
-    $ mkvirtualenv libheap
     $ git clone https://github.com/cloudburst/libheap
     $ cd libheap
     $ python setup.py install
