@@ -166,6 +166,44 @@ Finally, if we are working on an exploit and want to prototype malloc chunks and
     prev_size   = 0x1
     size        = 0x2
 
+### Statistics
+
+Memory allocation statistics similar to the ones printed by `malloc_stats(3)`
+can be obtained:
+
+    (gdb) print_mstats
+    ==================================Malloc Stats==================================
+    Arena 0:
+    system bytes     = 1867776
+    in use bytes     = 1662880
+    Arena 1:
+    system bytes     = 5984256
+    in use bytes     = 5140736
+    Arena 2:
+    system bytes     = 1589248
+    in use bytes     = 955032
+    Arena 3:
+    system bytes     = 135168
+    in use bytes     = 49168
+    Arena 4:
+    system bytes     = 770048
+    in use bytes     = 664992
+    Arena 5:
+    system bytes     = 466944
+    in use bytes     = 276984
+    Arena 6:
+    system bytes     = 720896
+    in use bytes     = 593072
+    Arena 7:
+    system bytes     = 1871872
+    in use bytes     = 1212952
+    Total (including mmap):
+    system bytes     = 13406208
+    in use bytes     = 10555816
+    max system bytes = 0
+    max mmap regions = 1
+    max mmap bytes   = 135168
+
 ### Glibc Structures
 
 There are also included pretty printers for struct malloc_par and struct malloc_state.  These can be viewed by attempting to print out the global variables:
