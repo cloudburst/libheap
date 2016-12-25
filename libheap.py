@@ -810,8 +810,8 @@ class print_malloc_stats(gdb.Command):
         system_b = in_use_b
 
         arena = 0
+        ar_ptr = malloc_state(main_arena_address)
         while(1):
-            ar_ptr = malloc_state(main_arena_address)
             mutex_lock(ar_ptr)
 
             print_title("Malloc Stats")
