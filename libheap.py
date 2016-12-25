@@ -272,14 +272,20 @@ def mutex_lock(ar_ptr, inferior=None):
         inferior = get_inferior()
 
     ar_ptr.mutex = 1
-    inferior.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+    try:
+        inferior.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+    except gdb.MemoryError:
+        pass
 
 def mutex_unlock(ar_ptr, inferior=None):
     if inferior == None:
         inferior = get_inferior()
 
     ar_ptr.mutex = 0
-    inferior.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+    try:
+        inferior.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+    except gdb.MemoryError:
+        pass
 
 def get_inferior():
     try:
