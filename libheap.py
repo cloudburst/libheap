@@ -123,14 +123,14 @@ def bin_at(m, i):
     "addressing -- note that bin_at(0) does not exist"
     if SIZE_SZ == 4:
         offsetof_fd = 0x8
-        return int(gdb.parse_and_eval("&main_arena.bins[%d]" % \
-                int((i -1) * 2)).cast(gdb.lookup_type('unsigned int')) \
-                - offsetof_fd)
+        cast_type = 'unsigned int'
     elif SIZE_SZ == 8:
         offsetof_fd = 0x10
-        return int(gdb.parse_and_eval("&main_arena.bins[%d]" % \
-                int((i -1) * 2)).cast(gdb.lookup_type('unsigned long')) \
-                - offsetof_fd)
+        cast_type = 'unsigned long'
+
+    return int(gdb.parse_and_eval("&((struct malloc_state *) 0x%x).bins[%d]" % \
+            (m.address, int((i -1) * 2))).cast(gdb.lookup_type(cast_type)) \
+            - offsetof_fd)
 
 def next_bin(b):
     return (b + 1)
