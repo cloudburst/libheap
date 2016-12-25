@@ -809,12 +809,12 @@ class print_malloc_stats(gdb.Command):
         in_use_b = mp['mmapped_mem']
         system_b = in_use_b
 
+        print_title("Malloc Stats")
+
         arena = 0
         ar_ptr = malloc_state(main_arena_address)
         while(1):
             mutex_lock(ar_ptr)
-
-            print_title("Malloc Stats")
 
             # account for top
             avail = chunksize(malloc_chunk(top(ar_ptr), inuse=True, \
@@ -847,9 +847,9 @@ class print_malloc_stats(gdb.Command):
 
             print_header("Arena {}:\n".format(arena))
             print("{:16} = ".format("system bytes"), end='')
-            print_value("{:#x}".format(ar_ptr.max_system_mem))
+            print_value("{}".format(ar_ptr.max_system_mem), end='\n')
             print("{:16} = ".format("in use bytes"), end='')
-            print_value("{:#x}".format(ar_ptr.max_system_mem - avail))
+            print_value("{}".format(ar_ptr.max_system_mem - avail), end='\n')
 
             system_b += ar_ptr.max_system_mem
             in_use_b += (ar_ptr.max_system_mem - avail)
@@ -861,17 +861,17 @@ class print_malloc_stats(gdb.Command):
                 ar_ptr = malloc_state(ar_ptr.next)
                 arena += 1
 
-        print_header("\nTotal (including mmap):\n")
+        print_header("Total (including mmap):\n")
         print("{:16} = ".format("system bytes"), end='')
-        print_value("{:#x}".format(system_b))
+        print_value("{}".format(system_b), end='\n')
         print("{:16} = ".format("in use bytes"), end='')
-        print_value("{:#x}".format(in_use_b))
+        print_value("{}".format(in_use_b), end='\n')
         print("{:16} = ".format("max system bytes"), end='')
-        print_value("{:#x}".format(mp['max_total_mem']))
+        print_value("{}".format(mp['max_total_mem']), end='\n')
         print("{:16} = ".format("max mmap regions"), end='')
-        print_value("{:#x}".format(mp['max_n_mmaps']))
+        print_value("{}".format(mp['max_n_mmaps']), end='\n')
         print("{:16} = ".format("max mmap bytes"), end='')
-        print_value("{:#x}".format(mp['max_mmapped_mem']))
+        print_value("{}".format(mp['max_mmapped_mem']), end='\n')
 
 
 ################################################################################
