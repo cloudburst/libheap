@@ -123,14 +123,14 @@ def bin_at(m, i):
     "addressing -- note that bin_at(0) does not exist"
     if SIZE_SZ == 4:
         offsetof_fd = 0x8
-        return int(gdb.parse_and_eval("&main_arena.bins[%d]" % \
-                int((i -1) * 2)).cast(gdb.lookup_type('unsigned int')) \
-                - offsetof_fd)
+        cast_type = 'unsigned int'
     elif SIZE_SZ == 8:
         offsetof_fd = 0x10
-        return int(gdb.parse_and_eval("&main_arena.bins[%d]" % \
-                int((i -1) * 2)).cast(gdb.lookup_type('unsigned long')) \
-                - offsetof_fd)
+        cast_type = 'unsigned long'
+
+    return int(gdb.parse_and_eval("&((struct malloc_state *) 0x%x).bins[%d]" % \
+            (m.address, int((i -1) * 2))).cast(gdb.lookup_type(cast_type)) \
+            - offsetof_fd)
 
 def next_bin(b):
     return (b + 1)
@@ -272,14 +272,20 @@ def mutex_lock(ar_ptr, inferior=None):
         inferior = get_inferior()
 
     ar_ptr.mutex = 1
-    inferior.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+    try:
+        inferior.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+    except gdb.MemoryError:
+        pass
 
 def mutex_unlock(ar_ptr, inferior=None):
     if inferior == None:
         inferior = get_inferior()
 
     ar_ptr.mutex = 0
-    inferior.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+    try:
+        inferior.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+    except gdb.MemoryError:
+        pass
 
 def get_inferior():
     try:
@@ -803,12 +809,12 @@ class print_malloc_stats(gdb.Command):
         in_use_b = mp['mmapped_mem']
         system_b = in_use_b
 
-        arena = 0
-        while(1):
-            ar_ptr = malloc_state(main_arena_address)
-            mutex_lock(ar_ptr)
+        print_title("Malloc Stats")
 
-            print_title("Malloc Stats")
+        arena = 0
+        ar_ptr = malloc_state(main_arena_address)
+        while(1):
+            mutex_lock(ar_ptr)
 
             # account for top
             avail = chunksize(malloc_chunk(top(ar_ptr), inuse=True, \
@@ -841,9 +847,9 @@ class print_malloc_stats(gdb.Command):
 
             print_header("Arena {}:\n".format(arena))
             print("{:16} = ".format("system bytes"), end='')
-            print_value("{:#x}".format(ar_ptr.max_system_mem))
+            print_value("{}".format(ar_ptr.max_system_mem), end='\n')
             print("{:16} = ".format("in use bytes"), end='')
-            print_value("{:#x}".format(ar_ptr.max_system_mem - avail))
+            print_value("{}".format(ar_ptr.max_system_mem - avail), end='\n')
 
             system_b += ar_ptr.max_system_mem
             in_use_b += (ar_ptr.max_system_mem - avail)
@@ -855,17 +861,17 @@ class print_malloc_stats(gdb.Command):
                 ar_ptr = malloc_state(ar_ptr.next)
                 arena += 1
 
-        print_header("\nTotal (including mmap):\n")
+        print_header("Total (including mmap):\n")
         print("{:16} = ".format("system bytes"), end='')
-        print_value("{:#x}".format(system_b))
+        print_value("{}".format(system_b), end='\n')
         print("{:16} = ".format("in use bytes"), end='')
-        print_value("{:#x}".format(in_use_b))
+        print_value("{}".format(in_use_b), end='\n')
         print("{:16} = ".format("max system bytes"), end='')
-        print_value("{:#x}".format(mp['max_total_mem']))
+        print_value("{}".format(mp['max_total_mem']), end='\n')
         print("{:16} = ".format("max mmap regions"), end='')
-        print_value("{:#x}".format(mp['max_n_mmaps']))
+        print_value("{}".format(mp['max_n_mmaps']), end='\n')
         print("{:16} = ".format("max mmap bytes"), end='')
-        print_value("{:#x}".format(mp['max_mmapped_mem']))
+        print_value("{}".format(mp['max_mmapped_mem']), end='\n')
 
 
 ################################################################################

@@ -76,8 +76,8 @@ def print_header(s):
 
     print(s, end="")
 
-def print_value(s):
-    print(color_value(s), end="")
+def print_value(s, end=""):
+    print(color_value(s), end=end)
 
 def color_title(s):
     if colors_enabled:
