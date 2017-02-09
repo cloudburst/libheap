@@ -129,7 +129,7 @@ def bin_at(m, i):
         cast_type = 'unsigned long'
 
     return int(gdb.parse_and_eval("&((struct malloc_state *) 0x%x).bins[%d]" % \
-            (m.address, int((i -1) * 2))).cast(gdb.lookup_type(cast_type)) \
+            (int(m.address), int((i -1) * 2))).cast(gdb.lookup_type(cast_type)) \
             - offsetof_fd)
 
 def next_bin(b):
