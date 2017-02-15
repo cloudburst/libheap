@@ -1249,7 +1249,7 @@ def print_bins(inferior, fb_base, sb_base):
                                 b.cast(gdb.lookup_type("unsigned long")) + 2*SIZE_SZ)))
                     except:
                         print_header("unsorted bin @ ")
-                        print_value("{:#x}".format(int(b + 2*SIZE_SZ) + c_none))
+                        print_value("{:#x}".format(int(b + 2*SIZE_SZ)))
                 else:
                     try:
                         print_header("small bin {} @ ".format(i))
