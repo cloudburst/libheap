@@ -8,7 +8,7 @@ It is currently hard coded for Intel architecture and glibc 2.19 mostly.  If you
 
 ### Glibc Installation
 
-Although [`libheap`] does not require a glibc compiled with gdb debugging support and symbols, it functions best if you do use one.  Without debug symbols you will need to supply the address of the main arena yourself. 
+Although [`libheap`] does not require a glibc compiled with gdb debugging support and symbols, it functions best if you do use one.  Without debug symbols you will need to supply the address of the main arena yourself.
 
 On Ubuntu:
 
@@ -27,8 +27,13 @@ Or:
 ### Libheap Installation
 
     $ git clone https://github.com/cloudburst/libheap
-    $ cd libheap
-    $ python setup.py install
+    $ pip3 install ./libheap/
+
+You may need to add it to your Python PATH afterwards so GDB can find it (depending on your setup):
+
+    echo "python import sys" >> ~/.gdbinit
+    echo "python sys.path.append('~/.local/lib/python3.6/site-packages/')" >> ~/.gdbinit
+    echo "python from libheap import *" >> ~/.gdbinit
 
 # Usage
 
