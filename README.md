@@ -32,7 +32,7 @@ Or:
 You may need to add it to your Python PATH afterwards so GDB can find it (depending on your setup):
 
     echo "python import sys" >> ~/.gdbinit
-    echo "python sys.path.append('~/.local/lib/python3.6/site-packages/')" >> ~/.gdbinit
+    echo "python sys.path.append('~/.local/lib/python3.6/site-packages/libheap/')" >> ~/.gdbinit
     echo "python from libheap import *" >> ~/.gdbinit
 
 # Usage
