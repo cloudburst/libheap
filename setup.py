@@ -11,5 +11,4 @@ setup(
     url         = 'https://github.com/cloudburst/libheap',
     license     = 'MIT',
     keywords    = 'ptmalloc gdb python glibc',
-    py_modules  = ['libheap', 'printutils', 'prettyprinters']
 )
