@@ -717,6 +717,11 @@ class malloc_par:
                     self.sbrk_base = int(line.split(' ')[0].split('-')[0], 16)
                     break
 
+        # we can't read heap address from mp_ or from maps file, exit libheap
+        if self.sbrk_base == 0:
+            print_error("Could not find sbrk_base, this setup is unsupported.  Exiting.")
+            exit()
+
     def __str__(self):
         mp = color_title("struct malloc_par {")
         mp += "\n{:16} = ".format("trim_threshold")
