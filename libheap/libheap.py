@@ -10,12 +10,16 @@ import sys
 import struct
 from functools import wraps
 
-from libheap.prettyprinters import *
-from libheap.printutils import print_error,print_title,print_header
 from libheap.ptmalloc.malloc_state import malloc_state
 from libheap.ptmalloc.malloc_par import malloc_par
 from libheap.ptmalloc.malloc_chunk import malloc_chunk
-from libheap.debugger.pygdbpython import get_inferior,get_arch,get_size_sz
+from libheap.debugger.pygdbpython import get_inferior, get_arch, get_size_sz
+
+from libheap.printutils import print_error, print_title, print_header
+from libheap.prettyprinters import malloc_par_printer
+from libheap.prettyprinters import malloc_state_printer
+from libheap.prettyprinters import malloc_chunk_printer
+from libheap.prettyprinters import heap_info_printer
 
 ################################################################################
 # MALLOC CONSTANTS AND MACROS
@@ -447,7 +451,7 @@ class print_malloc_stats(gdb.Command):
         print_value("{}".format(mp['max_mmapped_mem']), end='\n')
 
 
-################################################################################
+###############################################################################
 class heap(gdb.Command):
     "print a comprehensive view of the heap"
 
@@ -838,24 +842,24 @@ def print_bins(inferior, fb_base, sb_base):
             p = malloc_chunk(first(p), inuse=False)
 
 
-################################################################################
+###############################################################################
 def print_flat_listing(ar_ptr, sbrk_base):
     "print a flat listing of an arena, modified from jp and arena.c"
 
     print_title("Heap Dump")
-    print_header("\n{:>14}{:>17}{:>15}\n".format("ADDR", "SIZE", "STATUS"))
-    print("sbrk_base ", end="")
-    print("{:#x}".format(int(sbrk_base)))
+    print_header("\n{:>15}{:>17}{:>18}\n".format("ADDR", "SIZE", "STATUS"))
+    print("{:11}{:#x}".format("sbrk_base", int(sbrk_base)))
 
     p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
 
     while(1):
-        print("chunk     {:#x}{:>11}{:<8x}{:>3}".format(int(p.address),"0x",int(chunksize(p)),""),end="")
+        print("{:11}{: <#17x}{: <#16x}".format("chunk", int(p.address),
+              int(chunksize(p))), end="")
 
         if p.address == top(ar_ptr):
             print("(top)")
             break
-        elif p.size == (0|PREV_INUSE):
+        elif p.size == (0 | PREV_INUSE):
             print("(fence)")
             break
 
@@ -868,9 +872,9 @@ def print_flat_listing(ar_ptr, sbrk_base):
             print("BK ", end="")
             print_value("{:#x} ".format(int(p.bk)))
 
-            if ((p.fd == ar_ptr.last_remainder) \
-            and (p.bk == ar_ptr.last_remainder) \
-            and (ar_ptr.last_remainder != 0)):
+            if ((p.fd == ar_ptr.last_remainder)
+               and (p.bk == ar_ptr.last_remainder)
+               and (ar_ptr.last_remainder != 0)):
                 print("(LR)")
             elif ((p.fd == p.bk) & ~inuse(p)):
                 print("(LC)")
@@ -879,11 +883,11 @@ def print_flat_listing(ar_ptr, sbrk_base):
 
         p = malloc_chunk(next_chunk(p), inuse=True, read_data=False)
 
-    print("sbrk_end  ", end="")
-    print("{:#x}".format(int(sbrk_base + ar_ptr.max_system_mem)), end="")
+    sbrk_end = int(sbrk_base + ar_ptr.max_system_mem)
+    print("{:11}{:#x}".format("sbrk_end", sbrk_end), end="")
 
 
-################################################################################
+###############################################################################
 def print_compact_listing(ar_ptr, sbrk_base):
     "print a compact layout of the heap, modified from jp"
 
@@ -986,10 +990,43 @@ class print_bin_layout(gdb.Command):
         mutex_unlock(ar_ptr)
 
 
-################################################################################
+def pretty_print_heap_lookup(val):
+    "Look-up and return a pretty printer that can print val."
+
+    val_type = val.type
+
+    # If it points to a reference, get the reference.
+    if val_type.code == gdb.TYPE_CODE_REF:
+        val_type = val_type.target()
+
+    # Get the unqualified type, stripped of typedefs.
+    val_type = val_type.unqualified().strip_typedefs()
+
+    # Get the type name.
+    typename = val_type.tag
+    if typename is None:
+        return None
+    elif typename == "malloc_par":
+        print("calling malloc_par_printer")
+        return malloc_par_printer(val)
+    elif typename == "malloc_state":
+        return malloc_state_printer(val)
+    elif typename == "malloc_chunk":
+        return malloc_chunk_printer(val)
+    elif typename == "_heap_info":
+        return heap_info_printer(val)
+    else:
+        print(typename)
+
+    # Cannot find a pretty printer for type(val)
+    return None
+
+
+##############################################################################
 # INITIALIZE CUSTOM GDB CODE
-################################################################################
+##############################################################################
 
 heap()
 print_malloc_stats()
 print_bin_layout()
+gdb.pretty_printers.append(pretty_print_heap_lookup)
