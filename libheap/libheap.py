@@ -9,29 +9,17 @@ except ImportError:
 import sys
 import struct
 from functools import wraps
-from printutils import *
-from prettyprinters import *
+
+from libheap.prettyprinters import *
+from libheap.printutils import print_error,print_title,print_header
+from libheap.ptmalloc.malloc_state import malloc_state
+from libheap.debugger.pygdbpython import get_inferior,get_arch,get_size_sz
 
 ################################################################################
 # MALLOC CONSTANTS AND MACROS
 ################################################################################
 
-def get_arch():
-    return gdb.execute("maintenance info sections ?", to_string=True).strip().split()[-1:]
-
-try:
-    _machine = get_arch()[0]
-except IndexError:
-    _machine = ""
-    SIZE_SZ = 0
-
-if "elf64" in _machine:
-    SIZE_SZ = 8
-elif "elf32" in _machine:
-    SIZE_SZ = 4
-else:
-    SIZE_SZ = 0
-
+SIZE_SZ           = get_size_sz()
 MIN_CHUNK_SIZE    = 4 * SIZE_SZ
 MALLOC_ALIGNMENT  = 2 * SIZE_SZ
 MALLOC_ALIGN_MASK = MALLOC_ALIGNMENT - 1
@@ -287,18 +275,6 @@ def mutex_unlock(ar_ptr, inferior=None):
     except gdb.MemoryError:
         pass
 
-def get_inferior():
-    try:
-        if len(gdb.inferiors()) == 0:
-            print_error("No gdb inferior could be found.")
-            return -1
-        else:
-            inferior = gdb.inferiors()[0]
-            return inferior
-    except AttributeError:
-        print_error("This gdb's python support is too old.")
-        exit()
-
 def has_inferior(f):
     "decorator to make sure we have an inferior to operate on"
 
@@ -518,117 +494,6 @@ class malloc_chunk:
             mc += "\n{:11} = ".format("bk_nextsize")
             mc += color_value("{:#x}".format(self.bk_nextsize))
             return mc
-
-
-################################################################################
-class malloc_state:
-    "python representation of a struct malloc_state"
-
-    def __init__(self, addr=None, mem=None, inferior=None):
-        self.mutex          = 0
-        self.flags          = 0
-        self.fastbinsY      = 0
-        self.top            = 0
-        self.last_remainder = 0
-        self.bins           = 0
-        self.binmap         = 0
-        self.next           = 0
-        self.system_mem     = 0
-        self.max_system_mem = 0
-
-        if addr == None:
-            if mem == None:
-                print_error("Please specify a struct malloc_state address.")
-                return None
-
-            self.address = None
-        else:
-            self.address = addr
-
-        if inferior == None and mem == None:
-            inferior = get_inferior()
-            if inferior == -1:
-                return None
-
-        if mem == None:
-            # a string of raw memory was not provided
-            try:
-                if SIZE_SZ == 4:
-                    mem = inferior.read_memory(addr, 0x44c)
-                elif SIZE_SZ == 8:
-                    mem = inferior.read_memory(addr, 0x880)
-            except TypeError:
-                print_error("Invalid address specified.")
-                return None
-            except RuntimeError:
-                print_error("Could not read address {0:#x}".format(addr))
-                return None
-
-        if SIZE_SZ == 4:
-            (self.mutex,         \
-            self.flags)          = struct.unpack_from("<II", mem, 0x0)
-            self.fastbinsY       = struct.unpack_from("<10I", mem, 0x8)
-            (self.top,           \
-            self.last_remainder) = struct.unpack_from("<II", mem, 0x30)
-
-            self.bins            = struct.unpack_from("<254I", mem, 0x38)
-            self.binmap          = struct.unpack_from("<IIII", mem, 0x430)
-            (self.next,          \
-            self.system_mem,     \
-            self.max_system_mem) = struct.unpack_from("<III", mem, 0x440)
-        elif SIZE_SZ == 8:
-            (self.mutex,         \
-            self.flags)          = struct.unpack_from("<II", mem, 0x0)
-            self.fastbinsY       = struct.unpack_from("<10Q", mem, 0x8)
-            (self.top,           \
-            self.last_remainder) = struct.unpack_from("<QQ", mem, 0x58)
-            self.bins            = struct.unpack_from("<254Q", mem, 0x68)
-            self.binmap          = struct.unpack_from("<IIII", mem, 0x858)
-            (self.next,          \
-            self.system_mem,     \
-            self.max_system_mem) = struct.unpack_from("<QQQ", mem, 0x868)
-
-    def write(self, inferior=None):
-        if inferior == None:
-            inferior = get_inferior()
-            if inferior == -1:
-                return None
-
-        if SIZE_SZ == 4:
-            mem = struct.pack("<275I", self.mutex, self.flags, self.fastbinsY, \
-                    self.top, self.last_remainder, self.bins, self.binmap, \
-                    self.next, self.system_mem, self.max_system_mem)
-        elif SIZE_SZ == 8:
-            mem = struct.pack("<II266QIIIIQQQ", self.mutex, self.flags, \
-                    self.fastbinsY, self.top, self.last_remainder, self.bins, \
-                    self.binmap, self.next, self.system_mem, \
-                    self.max_system_mem)
-
-        inferior.write_memory(self.address, mem)
-
-    def __str__(self):
-        ms = color_title("struct malloc_state {")
-        ms += "\n{:14} = ".format("mutex")
-        ms += color_value("{:#x}".format(self.mutex))
-        ms += "\n{:14} = ".format("flags")
-        ms += color_value("{:#x}".format(self.flags))
-        ms += "\n{:14} = ".format("fastbinsY")
-        ms += color_value("{}".format("{...}"))
-        ms += "\n{:14} = ".format("top")
-        ms += color_value("{:#x}".format(self.top))
-        ms += "\n{:14} = ".format("last_remainder")
-        ms += color_value("{:#x}".format(self.last_remainder))
-        ms += "\n{:14} = ".format("bins")
-        ms += color_value("{}".format("{...}"))
-        ms += "\n{:14} = ".format("binmap")
-        ms += color_value("{}".format("{...}"))
-        ms += "\n{:14} = ".format("next")
-        ms += color_value("{:#x}".format(self.next))
-        ms += "\n{:14} = ".format("system_mem")
-        ms += color_value("{:#x}".format(self.system_mem))
-        ms += "\n{:14} = ".format("max_system_mem")
-        ms += color_value("{:#x}".format(self.max_system_mem))
-        return ms
 
 
 ################################################################################
@@ -992,7 +857,7 @@ class heap(gdb.Command):
         if len(arg) == 0:
             if ar_ptr.next == 0:
                 print_error("No arenas could be correctly guessed.")
-                print_error("Nothing was found at {0:#x}".format(ar_ptr.address))
+                print_error("Nothing was found at {0:#x} or struct malloc_state has changed size".format(ar_ptr.address))
                 return
 
             print_title("Heap Dump")

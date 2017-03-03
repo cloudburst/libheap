@@ -1,4 +1,4 @@
-from printutils import *
+from libheap.printutils import *
 
 try:
     import gdb
