@@ -1,7 +1,6 @@
 import struct
 from ..debugger.pygdbpython import get_inferior,get_size_sz
-from ..printutils import color_title
-from ..printutils import color_value
+from ..printutils import color_title, color_value, print_error
 
 class malloc_state:
     "python representation of a struct malloc_state"
