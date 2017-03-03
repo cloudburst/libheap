@@ -38,7 +38,7 @@ class malloc_par_printer:
         return mp
 
 
-class malloc_state_printer(object):
+class malloc_state_printer:
     "pretty printer for the malloc_state struct (ar_ptr/main_arena)"
 
     def __init__(self, val):
@@ -69,7 +69,7 @@ class malloc_state_printer(object):
         return ms
 
 
-class malloc_chunk_printer(object):
+class malloc_chunk_printer:
     "pretty printer for the malloc_chunk struct"
 
     def __init__(self, val):
