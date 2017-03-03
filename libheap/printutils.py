@@ -3,7 +3,7 @@ from __future__ import print_function
 import re
 import sys
 
-colors_enabled = False
+colors_enabled = True
 
 # bash color support, taken from pwndbg
 NORMAL         = "\x1b[0m"
