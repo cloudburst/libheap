@@ -27,13 +27,12 @@ Or:
 ### Libheap Installation
 
     $ git clone https://github.com/cloudburst/libheap
-    $ pip3 install ./libheap/
+    $ pip3 install --user ./libheap/
 
-You may need to add it to your Python PATH afterwards so GDB can find it (depending on your setup):
+You may need to add your pip user install to your Python PATH afterwards so GDB can find it (depending on your setup):
 
     echo "python import sys" >> ~/.gdbinit
     echo "python sys.path.append('~/.local/lib/python3.6/site-packages/')" >> ~/.gdbinit
-    echo "python from libheap import *" >> ~/.gdbinit
 
 # Usage
 
@@ -41,6 +40,10 @@ Loading [`libheap`] is the same as any other Python library:
 
     $ gdb
     (gdb) python from libheap import *
+
+This can also be added to your gdbinit to save a step:
+
+    echo "python from libheap import *" >> ~/.gdbinit
 
 ### Overall Heap Status
 
