@@ -1,4 +1,5 @@
 import sys
+from ..printutils import print_error
 
 try:
     import gdb
@@ -6,8 +7,11 @@ except ImportError:
     print("Not running inside of GDB, exiting...")
     exit()
 
+
 def get_arch():
-    return gdb.execute("maintenance info sections ?", to_string=True).strip().split()[-1:]
+    return gdb.execute("maintenance info sections ?",
+                       to_string=True).strip().split()[-1:]
+
 
 def get_size_sz():
     try:
@@ -24,6 +28,7 @@ def get_size_sz():
         SIZE_SZ = 0
 
     return SIZE_SZ
+
 
 def get_inferior():
     try:
