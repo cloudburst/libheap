@@ -27,3 +27,7 @@ You may need to add your pip user install location to your Python PATH afterward
 
     echo "python import sys" >> ~/.gdbinit
     echo "python sys.path.append('~/.local/lib/python3.4/site-packages/')" >> ~/.gdbinit
+
+#### PEDA Conflict
+
+If you are using PEDA (a gdb frontend), its buffering seems to conflict with heap printing so it is recommended to [disable it](https://gist.github.com/cloudburst/f5b6ec91b1e2fdad9ebb4b77bb13fece).
