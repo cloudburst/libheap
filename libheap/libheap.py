@@ -15,15 +15,18 @@ from libheap.ptmalloc.malloc_par import malloc_par
 from libheap.ptmalloc.malloc_chunk import malloc_chunk
 from libheap.debugger.pygdbpython import get_inferior, get_arch, get_size_sz
 
-from libheap.printutils import print_error, print_title, print_header
+from libheap.printutils import print_error
+from libheap.printutils import print_title
+from libheap.printutils import print_header
+from libheap.printutils import print_value
 from libheap.prettyprinters import malloc_par_printer
 from libheap.prettyprinters import malloc_state_printer
 from libheap.prettyprinters import malloc_chunk_printer
 from libheap.prettyprinters import heap_info_printer
 
-################################################################################
+###############################################################################
 # MALLOC CONSTANTS AND MACROS
-################################################################################
+###############################################################################
 
 SIZE_SZ           = get_size_sz()
 MIN_CHUNK_SIZE    = 4 * SIZE_SZ
@@ -1007,7 +1010,6 @@ def pretty_print_heap_lookup(val):
     if typename is None:
         return None
     elif typename == "malloc_par":
-        print("calling malloc_par_printer")
         return malloc_par_printer(val)
     elif typename == "malloc_state":
         return malloc_state_printer(val)
