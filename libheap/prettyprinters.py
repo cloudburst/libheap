@@ -1,6 +1,13 @@
 from libheap.printutils import color_title, color_value
 
 
+try:
+    import gdb
+except ImportError:
+    print("Not running inside of GDB, exiting...")
+    exit()
+
+
 class malloc_par_printer:
     "pretty printer for the malloc_par struct (mp_)"
 
@@ -109,3 +116,34 @@ class heap_info_printer:
         hi += "\n{:13} = ".format("mprotect_size")
         hi += color_value("{:#x}".format(int(self.val['mprotect_size'])))
         return hi
+
+
+def pretty_print_heap_lookup(val):
+    "Look-up and return a pretty printer that can print val."
+
+    val_type = val.type
+
+    # If it points to a reference, get the reference.
+    if val_type.code == gdb.TYPE_CODE_REF:
+        val_type = val_type.target()
+
+    # Get the unqualified type, stripped of typedefs.
+    val_type = val_type.unqualified().strip_typedefs()
+
+    # Get the type name.
+    typename = val_type.tag
+    if typename is None:
+        return None
+    elif typename == "malloc_par":
+        return malloc_par_printer(val)
+    elif typename == "malloc_state":
+        return malloc_state_printer(val)
+    elif typename == "malloc_chunk":
+        return malloc_chunk_printer(val)
+    elif typename == "_heap_info":
+        return heap_info_printer(val)
+    else:
+        print(typename)
+
+    # Cannot find a pretty printer for type(val)
+    return None

@@ -19,10 +19,7 @@ from libheap.printutils import print_error
 from libheap.printutils import print_title
 from libheap.printutils import print_header
 from libheap.printutils import print_value
-from libheap.prettyprinters import malloc_par_printer
-from libheap.prettyprinters import malloc_state_printer
-from libheap.prettyprinters import malloc_chunk_printer
-from libheap.prettyprinters import heap_info_printer
+from libheap.prettyprinters import pretty_print_heap_lookup
 
 ###############################################################################
 # MALLOC CONSTANTS AND MACROS
@@ -991,37 +988,6 @@ class print_bin_layout(gdb.Command):
             print("Bin {} empty.".format(int(arg)))
 
         mutex_unlock(ar_ptr)
-
-
-def pretty_print_heap_lookup(val):
-    "Look-up and return a pretty printer that can print val."
-
-    val_type = val.type
-
-    # If it points to a reference, get the reference.
-    if val_type.code == gdb.TYPE_CODE_REF:
-        val_type = val_type.target()
-
-    # Get the unqualified type, stripped of typedefs.
-    val_type = val_type.unqualified().strip_typedefs()
-
-    # Get the type name.
-    typename = val_type.tag
-    if typename is None:
-        return None
-    elif typename == "malloc_par":
-        return malloc_par_printer(val)
-    elif typename == "malloc_state":
-        return malloc_state_printer(val)
-    elif typename == "malloc_chunk":
-        return malloc_chunk_printer(val)
-    elif typename == "_heap_info":
-        return heap_info_printer(val)
-    else:
-        print(typename)
-
-    # Cannot find a pretty printer for type(val)
-    return None
 
 
 ##############################################################################
