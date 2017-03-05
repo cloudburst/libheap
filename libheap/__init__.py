@@ -1,1 +1,1 @@
-__all__ = ["libheap"]
+__all__ = ["libheap", "printutils"]
