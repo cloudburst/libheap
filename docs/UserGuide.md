@@ -17,37 +17,33 @@ A number of different functions exist to print the overall state of the heap as 
 
 #### heap -h
     (gdb) heap -h
-    ============================== Heap Dump Help ==================================
+    "heap" Options:
 
-    Options:
+    -a 0x1234 Specify an arena address
+    -b        Print compact bin listing (only free chunks)
+    -c        Print compact arena listing (all chunks)
+    -l        Print a flat listing of all chunks in an arena
+    -f [#]    Print all fast bins, or only a single fast bin
+    -s [#]    Print all small bins, or only a single small bin
 
-      -a 0x1234 Specify an arena address
-      -b        Print compact bin listing (only free chunks)
-      -c        Print compact arena listing (all chunks)
-      -f [#]    Print all fast bins, or only a single fast bin
-      -l        Print a flat listing of all chunks in an arena
-      -s [#]    Print all small bins, or only a single small bin
+    print_mstats  Print memory alloc statistics similar to malloc_stats(3)
+    print_bin_layout [#]  Print the layout of a particular free bin
 
 #### heap
     (gdb) heap
-    ================================== Heap Dump ===================================
-
     Arena(s) found:
          arena @ 0xf2f3a0
 
 #### heap -b
     (gdb) heap -b
-    ================================== Heap Dump ===================================
-
-      fast bin 0   @ 0x804b000
+    fast bin 0   @ 0x804b000
         free chunk @ 0x804b000 - size 0x10
-      unsorted bin @ 0xf2f3d8
+    unsorted bin @ 0xf2f3d8
         free_chunk @ 0x804b010 - size 0x88
 
 #### heap -f
     (gdb) heap -f
-    =================================== Fastbins ===================================
-
+    fastbins
     [ fb  0 ] 0xf2f3a8 -> [ 0x0804b000 ] (16)
     [ fb  1 ] 0xf2f3ac -> [ 0x00000000 ]
     [ fb  2 ] 0xf2f3b0 -> [ 0x00000000 ]
@@ -59,18 +55,14 @@ A number of different functions exist to print the overall state of the heap as 
     [ fb  8 ] 0xf2f3c8 -> [ 0x00000000 ]
     [ fb  9 ] 0xf2f3cc -> [ 0x00000000 ]
 
-
 #### heap -s
     (gdb) heap -s 1
-    =================================== Smallbins ==================================
-
+    smallbins
     [ sb 01 ] 0xf2f3d8 -> [ 0x0804b010 | 0x0804b010 ]
                           [ 0x00f2f3d0 | 0x00f2f3d0 ]  (136)
 
 #### heap -l
     (gdb) heap -l
-    ================================== Heap Dump ===================================
-
               ADDR             SIZE         STATUS
     sbrk_base 0x602c00
     chunk     0x602c00         0x110        (inuse)
@@ -83,7 +75,7 @@ A number of different functions exist to print the overall state of the heap as 
 
 #### heap -c
     (gdb) heap -c
-    ================================== Heap Dump ===================================
+    compact dump
     |A||11||A||11||A||T|
 
 ### Chunks
@@ -145,8 +137,9 @@ Finally, if we are working on an exploit and want to prototype malloc chunks and
 Memory allocation statistics similar to the ones printed by `malloc_stats(3)`
 can be obtained:
 
-    (gdb) print_mstats
-    ==================================Malloc Stats==================================
+    (gdb) mstats
+    Malloc Stats
+
     Arena 0:
     system bytes     = 1867776
     in use bytes     = 1662880
@@ -171,6 +164,7 @@ can be obtained:
     Arena 7:
     system bytes     = 1871872
     in use bytes     = 1212952
+
     Total (including mmap):
     system bytes     = 13406208
     in use bytes     = 10555816
