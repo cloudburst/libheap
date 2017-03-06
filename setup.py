@@ -5,7 +5,8 @@ from distutils.core import setup
 setup(
     name='libheap',
     packages=['libheap', 'libheap.debugger', 'libheap.ptmalloc',
-              'libheap.frontend'],
+              'libheap.frontend', 'libheap.frontend.commands',
+              'libheap.frontend.commands.gdb'],
     version='0.1',
     description='gdb python library for examining the glibc heap (ptmalloc)',
     author='cloud',

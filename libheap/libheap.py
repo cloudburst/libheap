@@ -26,7 +26,7 @@ from libheap.printutils import print_value
 
 from libheap.prettyprinters import pretty_print_heap_lookup
 
-from libheap.frontend.frontend_gdb import print_bin_layout
+from libheap.frontend.frontend_gdb import frontend_gdb
 
 ##############################################################################
 # Temp ptmalloc compat layer
@@ -692,7 +692,7 @@ def print_compact_listing(ar_ptr, sbrk_base):
 # Register GDB Commands
 heap()
 print_malloc_stats()
-print_bin_layout()
+frontend_gdb()
 
 # Register GDB Pretty Printers
 gdb.pretty_printers.append(pretty_print_heap_lookup)
