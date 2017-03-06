@@ -83,11 +83,11 @@ class ptmalloc:
         return (p.size & ~self.SIZE_BITS)
 
     @gdb_is_running
-    def mutex_lock(ar_ptr, inferior=None):
+    def mutex_lock(self, ar_ptr, inferior=None):
         from gdb import MemoryError
 
         if inferior is None:
-            inferior = get_inferior()
+            inferior = ar_ptr.inferior
 
         ar_ptr.mutex = 1
         try:
@@ -97,11 +97,11 @@ class ptmalloc:
             pass
 
     @gdb_is_running
-    def mutex_unlock(ar_ptr, inferior=None):
+    def mutex_unlock(self, ar_ptr, inferior=None):
         from gdb import MemoryError
 
         if inferior is None:
-            inferior = get_inferior()
+            inferior = ar_ptr.inferior
 
         ar_ptr.mutex = 0
         try:

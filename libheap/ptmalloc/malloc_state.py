@@ -33,9 +33,11 @@ class malloc_state:
             self.address = addr
 
         if inferior is None and mem is None:
-            inferior = get_inferior()
-            if inferior == -1:
+            self.inferior = get_inferior()
+            if self.inferior == -1:
                 return None
+        else:
+            self.inferior = inferior
 
         self.SIZE_SZ = get_size_sz()
 
@@ -74,7 +76,7 @@ class malloc_state:
 
     def write(self, inferior=None):
         if inferior is None:
-            inferior = get_inferior()
+            inferior = self.inferior
             if inferior == -1:
                 return None
 

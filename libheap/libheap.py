@@ -18,13 +18,14 @@ from libheap.ptmalloc.malloc_state import malloc_state
 
 from libheap.debugger.pygdbpython import get_inferior
 
-from libheap.printutils import color_value
 from libheap.printutils import print_error
 from libheap.printutils import print_title
 from libheap.printutils import print_header
 from libheap.printutils import print_value
 
 from libheap.prettyprinters import pretty_print_heap_lookup
+
+from libheap.frontend.frontend_gdb import print_bin_layout
 
 ##############################################################################
 # Temp ptmalloc compat layer
@@ -94,13 +95,15 @@ class print_malloc_stats(gdb.Command):
             print_error("Invalid main_arena address (0)")
             return
 
+        inferior = get_inferior()
+
         in_use_b = mp['mmapped_mem']
         system_b = in_use_b
 
         print_title("Malloc Stats")
 
         arena = 0
-        ar_ptr = malloc_state(main_arena_address)
+        ar_ptr = malloc_state(main_arena_address, inferior=inferior)
         while(1):
             ptm.mutex_lock(ar_ptr)
 
@@ -124,7 +127,7 @@ class print_malloc_stats(gdb.Command):
             avail += fastavail
 
             # traverse regular bins
-            for i in range(1, p.NBINS):
+            for i in range(1, ptm.NBINS):
                 b = ptm.bin_at(ar_ptr, i)
                 p = malloc_chunk(ptm.first(malloc_chunk(b, inuse=False)),
                                  inuse=False)
@@ -147,7 +150,7 @@ class print_malloc_stats(gdb.Command):
             if ar_ptr.next == main_arena_address:
                 break
             else:
-                ar_ptr = malloc_state(ar_ptr.next)
+                ar_ptr = malloc_state(ar_ptr.next, inferior=inferior)
                 arena += 1
 
         print_header("Total (including mmap):\n")
@@ -273,7 +276,7 @@ class heap(gdb.Command):
             print_error("Invalid arena address (0)")
             return
 
-        ar_ptr = malloc_state(arena_address)
+        ar_ptr = malloc_state(arena_address, inferior=inferior)
 
         if len(arg) == 0:
             if ar_ptr.next == 0:
@@ -298,10 +301,11 @@ class heap(gdb.Command):
             if ar_ptr.address != ar_ptr.next:
                 # we have more than one arena
 
-                curr_arena = malloc_state(ar_ptr.next)
+                curr_arena = malloc_state(ar_ptr.next, inferior=inferior)
                 while (ar_ptr.address != curr_arena.address):
                     print("\t arena @ {:#x}".format(int(curr_arena.address)))
-                    curr_arena = malloc_state(curr_arena.next)
+                    curr_arena = malloc_state(curr_arena.next,
+                                              inferior=inferior)
 
                     if curr_arena.address == 0:
                         print_error("No arenas could be correctly found.")
@@ -656,91 +660,10 @@ def print_compact_listing(ar_ptr, sbrk_base):
         p = malloc_chunk(ptm.next_chunk(p), inuse=True, read_data=False)
 
 
-###############################################################################
-class print_bin_layout(gdb.Command):
-    "dump the layout of a free bin"
-
-    def __init__(self):
-        super(print_bin_layout, self).__init__("print_bin_layout",
-                                               gdb.COMMAND_DATA,
-                                               gdb.COMPLETE_NONE)
-
-    def invoke(self, arg, from_tty):
-        "Specify an optional arena addr: print_bin_layout main_arena=0x12345"
-
-        if ptm.SIZE_SZ == 0:
-            ptm.set_globals()
-
-        if len(arg) == 0:
-            print_error("Please specify the free bin to dump")
-            return
-
-        try:
-            if arg.find("main_arena") == -1:
-                main_arena = gdb.selected_frame().read_var('main_arena')
-                main_arena_address = main_arena.address
-            else:
-                arg = arg.split()
-                for item in arg:
-                    if item.find("main_arena") != -1:
-                        if len(item) < 12:
-                            print_error("Malformed main_arena parameter")
-                            return
-                        else:
-                            main_arena_address = int(item[11:], 16)
-        except RuntimeError:
-            print_error("No frame is currently selected.")
-            return
-        except ValueError:
-            print_error("Debug glibc was not found.")
-            return
-
-        if main_arena_address == 0:
-            print_error("Invalid main_arena address (0)")
-            return
-
-        ar_ptr = malloc_state(main_arena_address)
-        ptm.mutex_lock(ar_ptr)
-
-        print_title("Bin Layout")
-
-        b = ptm.bin_at(ar_ptr, int(arg))
-        p = malloc_chunk(ptm.first(malloc_chunk(b, inuse=False)), inuse=False)
-        print_once = True
-        print_str = ""
-        count = 0
-
-        while p.address != int(b):
-            if print_once:
-                print_once = False
-                print_str += "-->  "
-                print_str += color_value("[bin {}]".format(int(arg)))
-                count += 1
-
-            print_str += "  <-->  "
-            print_str += color_value("{:#x}".format(int(p.address)))
-            count += 1
-            p = malloc_chunk(ptm.first(p), inuse=False)
-
-        if len(print_str) != 0:
-            print_str += "  <--"
-            print(print_str)
-            print("|{}|".format(" " * (len(print_str) - 2 - count*12)))
-            print("{}".format("-" * (len(print_str) - count*12)))
-        else:
-            print("Bin {} empty.".format(int(arg)))
-
-        ptm.mutex_unlock(ar_ptr)
-
-
-##############################################################################
 # Register GDB Commands
-##############################################################################
 heap()
 print_malloc_stats()
 print_bin_layout()
 
-##############################################################################
 # Register GDB Pretty Printers
-##############################################################################
 gdb.pretty_printers.append(pretty_print_heap_lookup)
