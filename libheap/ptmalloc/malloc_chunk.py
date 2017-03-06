@@ -1,13 +1,13 @@
 import struct
 
-from ..debugger.pygdbpython import get_inferior
-from ..debugger.pygdbpython import get_size_sz
-
-from ..printutils import color_title
-from ..printutils import color_value
-from ..printutils import print_error
-
 from libheap import ptmalloc
+
+from libheap.printutils import color_title
+from libheap.printutils import color_value
+from libheap.printutils import print_error
+
+from libheap.debugger.pygdbpython import get_inferior
+from libheap.debugger.pygdbpython import get_size_sz
 
 
 class malloc_chunk:
