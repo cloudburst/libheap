@@ -26,7 +26,7 @@ A number of different functions exist to print the overall state of the heap as 
     -f [#]    Print all fast bins, or only a single fast bin
     -s [#]    Print all small bins, or only a single small bin
 
-    print_mstats  Print memory alloc statistics similar to malloc_stats(3)
+    mstats    Print memory alloc statistics similar to malloc_stats(3)
     print_bin_layout [#]  Print the layout of a particular free bin
 
 #### heap

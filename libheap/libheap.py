@@ -88,7 +88,7 @@ class heap(gdb.Command):
             print_header("{:<14}".format("-s [#]"))
             print("Print all small bins, or only a single small bin")
             print("")
-            print_header("{:<14}".format("print_mstats"), end="")
+            print_header("{:<14}".format("mstats"), end="")
             print("Print memory alloc statistics similar to malloc_stats(3)")
             print_header("{:<22}".format("print_bin_layout [#]"), end="")
             print("Print the layout of a particular free bin")
