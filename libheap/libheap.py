@@ -1,12 +1,13 @@
 from __future__ import print_function
 
+import sys
+
 try:
     import gdb
 except ImportError:
     print("Not running inside of GDB, exiting...")
-    exit()
+    sys.exit()
 
-import sys
 import struct
 from functools import wraps
 
@@ -45,9 +46,9 @@ def has_inferior(f):
             else:
                 print_error("No debugee could be found.  \
                             Attach or start a program.")
-                exit()
+                sys.exit()
         else:
-            exit()
+            sys.exit()
     return with_inferior
 
 
@@ -301,14 +302,16 @@ class heap(gdb.Command):
                 print_header("{:#x}".format(arena_print), end="\n")
             except:
                 # arena address obtained via -a
-                print_header("\t arena @ {:#x}".format(int(ar_ptr.address)), end="\n")
+                print_header("\t arena @ {:#x}".format(
+                             int(ar_ptr.address)), end="\n")
 
             if ar_ptr.address != ar_ptr.next:
                 # we have more than one arena
 
                 curr_arena = malloc_state(ar_ptr.next, inferior=inferior)
                 while (ar_ptr.address != curr_arena.address):
-                    print("\t arena @ {:#x}".format(int(curr_arena.address)))
+                    print("\t arena @ {:#x}".format(
+                          int(curr_arena.address)))
                     curr_arena = malloc_state(curr_arena.next,
                                               inferior=inferior)
 
@@ -553,8 +556,9 @@ def print_bins(inferior, fb_base, sb_base):
                 print_once = False
                 if fb > 0:
                     print("")
-                print_header("fast bin {} @ ".format(fb), end="")
-                print_header("{:#x}".format(p.fd), end="")
+                print_header("fast bin {}".format(fb), end="")
+                print(" @ ", end="")
+                print_value("{:#x}".format(p.fd), end="")
 
             print("\n\tfree chunk @ ", end="")
             print_value("{:#x} ".format(int(p.fd)))
@@ -568,34 +572,38 @@ def print_bins(inferior, fb_base, sb_base):
         p = malloc_chunk(ptm.first(malloc_chunk(b, inuse=False)), inuse=False)
 
         while p.address != int(b):
-            print("")
             if print_once:
+                print("")
                 print_once = False
                 if i == 1:
                     try:
-                        print_header("unsorted bin @ ")
+                        print_header("unsorted bin", end="")
+                        print(" @ ", end="")
                         cast_val = b.cast(gdb.lookup_type("unsigned long"))
                         print_value("{:#x}".format(int(cast_val + 2
-                                    * ptm.SIZE_SZ)), end="\n")
+                                    * ptm.SIZE_SZ)), end="")
                     except:
-                        print_header("unsorted bin @ ")
+                        print_header("unsorted bin", end="")
+                        print(" @ ", end="")
                         print_value("{:#x}".format(int(b + 2
-                                    * ptm.SIZE_SZ)), end="\n")
+                                    * ptm.SIZE_SZ)), end="")
                 else:
                     try:
-                        print_header("small bin {} @ ".format(i))
+                        print_header("small bin {}".format(i))
+                        print(" @ ", end="")
                         cast_val = b.cast(gdb.lookup_type("unsigned long"))
                         print_value("{:#x}".format(int(cast_val + 2
-                                    * ptm.SIZE_SZ)), end="\n")
+                                    * ptm.SIZE_SZ)), end="")
                     except:
-                        print_header("small bin {} @ ".format(i))
+                        print_header("small bin {}".format(i))
+                        print(" @ ", end="")
                         print_value("{:#x}".format(int(b + 2
-                                    * ptm.SIZE_SZ)), end="\n")
+                                    * ptm.SIZE_SZ)), end="")
 
-            print("\tfree chunk @ ", end="")
+            print("\n\tfree chunk @ ", end="")
             print_value("{:#x} ".format(int(p.address)))
             print("- size ", end="")
-            print_value("{:#x}".format(int(ptm.chunksize(p))), end="")
+            print("{:#x}".format(int(ptm.chunksize(p))), end="")
             p = malloc_chunk(ptm.first(p), inuse=False)
 
 
@@ -607,7 +615,8 @@ def print_flat_listing(ar_ptr, sbrk_base):
         ptm.set_globals()
 
     # print_title("{:>15}".format("flat heap listing"), end="\n")
-    print_title("{:>15}{:>17}{:>18}".format("ADDR", "SIZE", "STATUS"), end="\n")
+    print_title("{:>15}{:>17}{:>18}".format("ADDR", "SIZE", "STATUS"),
+                end="\n")
     print("{:11}".format("sbrk_base"), end="")
     print_value("{:#x}".format(int(sbrk_base)), end="\n")
 

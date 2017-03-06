@@ -12,7 +12,6 @@ from ..ptmalloc.malloc_state import malloc_state
 
 from ..printutils import color_value
 from ..printutils import print_error
-from ..printutils import print_title
 from ..printutils import print_value
 
 from ..ptmalloc.ptmalloc import ptmalloc
