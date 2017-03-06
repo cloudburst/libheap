@@ -111,38 +111,40 @@ def underline(x):
 
 
 def colorize(x, color):
-    return color + terminateWith(str(x), color) + NORMAL
+    if colors_enabled:
+        return color + terminateWith(str(x), color) + NORMAL
+    else:
+        return x
 
 
 def terminateWith(x, color):
     return re.sub('\x1b\\[0m', NORMAL + color, x)
 
 
-def print_error(s):
+def print_error(s, end="\n"):
     error = "[!] {0}".format(s)
-
-    if colors_enabled:
-        color = RED
-        error = colorize(error, color)
-
-    print(error)
+    color = RED
+    error = colorize(error, color)
+    print(error, end=end)
 
 
-def print_title(s):
+def print_title(s, end="\n"):
+    print(color_title(s), end=end)
+
+
+def print_title_wide(s, end="\n"):
     width = 80
     lwidth = (width-len(s))/2
     rwidth = (width-len(s))/2
     title = '{:=<{lwidth}}{}{:=<{rwidth}}'.format(
             '', s, '', lwidth=lwidth, rwidth=rwidth)
-    print(color_title(title))
+    print(color_title(title), end=end)
 
 
-def print_header(s):
-    if colors_enabled:
-        color = YELLOW
-        s = colorize(s, color)
-
-    print(s, end="")
+def print_header(s, end=""):
+    color = YELLOW
+    s = colorize(s, color)
+    print(s, end=end)
 
 
 def print_value(s, end=""):
@@ -150,16 +152,10 @@ def print_value(s, end=""):
 
 
 def color_title(s):
-    if colors_enabled:
-        color = GREEN
-        return colorize(s, color)
-    else:
-        return s
+    color = GREEN + UNDERLINE
+    return colorize(s, color)
 
 
 def color_value(s):
-    if colors_enabled:
-        color = BLUE
-        return colorize(s, color)
-    else:
-        return s
+    color = BLUE
+    return colorize(s, color)

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 try:
     import gdb
 except ImportError:
@@ -11,6 +13,7 @@ from ..ptmalloc.malloc_state import malloc_state
 from ..printutils import color_value
 from ..printutils import print_error
 from ..printutils import print_title
+from ..printutils import print_value
 
 from ..ptmalloc.ptmalloc import ptmalloc
 
@@ -62,7 +65,7 @@ class print_bin_layout(gdb.Command):
         ar_ptr = malloc_state(main_arena_address)
         ptm.mutex_lock(ar_ptr)
 
-        print_title("Bin Layout")
+        # print_title("Bin Layout")
 
         if int(arg) == 0:
             print_error("bin_at(0) does not exist")
@@ -92,6 +95,7 @@ class print_bin_layout(gdb.Command):
             print("|{}|".format(" " * (len(print_str) - 2 - count*12)))
             print("{}".format("-" * (len(print_str) - count*12)))
         else:
-            print("Bin {} empty.".format(int(arg)))
+            print_value("Bin {} ".format(int(arg)), end="")
+            print("empty")
 
         ptm.mutex_unlock(ar_ptr)
