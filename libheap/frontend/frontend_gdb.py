@@ -14,8 +14,6 @@ from ..printutils import print_title
 
 from ..ptmalloc.ptmalloc import ptmalloc
 
-ptm = ptmalloc()
-
 
 class print_bin_layout(gdb.Command):
     "dump the layout of a free bin"
@@ -27,6 +25,8 @@ class print_bin_layout(gdb.Command):
 
     def invoke(self, arg, from_tty):
         "Specify an optional arena addr: print_bin_layout main_arena=0x12345"
+
+        ptm = ptmalloc()
 
         if ptm.SIZE_SZ == 0:
             ptm.set_globals()
@@ -63,6 +63,10 @@ class print_bin_layout(gdb.Command):
         ptm.mutex_lock(ar_ptr)
 
         print_title("Bin Layout")
+
+        if int(arg) == 0:
+            print_error("bin_at(0) does not exist")
+            return
 
         b = ptm.bin_at(ar_ptr, int(arg))
         p = malloc_chunk(ptm.first(malloc_chunk(b, inuse=False)), inuse=False)

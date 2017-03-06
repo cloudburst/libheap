@@ -25,8 +25,7 @@ class malloc_chunk:
 
         if addr is None or addr == 0:
             if mem is None:
-                print_error("Please specify a valid struct malloc_chunk \
-                            address.")
+                print_error("Please specify a valid struct malloc_chunk addr.")
                 return None
 
             self.address = None
@@ -57,16 +56,14 @@ class malloc_chunk:
             # a string of raw memory was provided
             if inuse:
                 if (len(mem) != 0x8) and (len(mem) < 0x10):
-                    print_error("Insufficient memory provided for a \
-                                malloc_chunk.")
+                    print_error("Insufficient mem provided for malloc_chunk.")
                     return None
                 if len(mem) == 0x8 or len(mem) == 0x10:
                     # header only provided
                     read_data = False
             else:
                 if (len(mem) != 0x18) and (len(mem) < 0x30):
-                    print_error("Insufficient memory provided for a free \
-                                chunk.")
+                    print_error("Insufficient mem provided for a free chunk.")
                     return None
 
         if self.SIZE_SZ == 4:

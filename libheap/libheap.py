@@ -429,13 +429,16 @@ def print_fastbins(inferior, fb_base, fb_num):
 
     print_title("Fastbins")
 
-    pad_width = 32
+    if ptm.SIZE_SZ == 4:
+        pad_width = 32
+    elif ptm.SIZE_SZ == 8:
+        pad_width = 29
 
     for fb in range(0, ptm.NFASTBINS):
         if fb_num is not None:
             fb = fb_num
 
-        offset = fb_base + fb * ptm.SIZE_SZ
+        offset = int(fb_base + fb * ptm.SIZE_SZ)
         try:
             mem = inferior.read_memory(offset, ptm.SIZE_SZ)
             if ptm.SIZE_SZ == 4:
@@ -448,8 +451,8 @@ def print_fastbins(inferior, fb_base, fb_num):
 
         print("")
         print_header("[ fb {} ] ".format(fb))
-        print("{:#x}{:>{width}}".format(int(offset), "-> ", width=5), end="")
-        print_value("[ {:#x} ] ".format(int(fd)))
+        print("{:#x}{:>{width}}".format(offset, "-> ", width=5), end="")
+        print_value("[ {:#x} ] ".format(fd))
 
         if fd != 0:  # fastbin is not empty
             fb_size = ((ptm.MIN_CHUNK_SIZE) + (ptm.MALLOC_ALIGNMENT) * fb)
@@ -461,10 +464,10 @@ def print_fastbins(inferior, fb_base, fb_num):
                     # could not read memory section
                     break
 
-                print_value("{:>{width}}{:#x}{}".format("[ ", int(chunk.fd),
-                                                        " ] ",
-                                                        width=pad_width))
-                print("({})".format(int(fb_size)), end="")
+                print_value("\n{:>{width}} {:#x} {} ".format("[", chunk.fd,
+                                                             "]",
+                                                             width=pad_width))
+                print("({})".format(fb_size), end="")
 
                 chunk = malloc_chunk(chunk.fd, inuse=False)
 
@@ -481,7 +484,10 @@ def print_smallbins(inferior, sb_base, sb_num):
 
     print_title("Smallbins")
 
-    pad_width = 33
+    if ptm.SIZE_SZ == 4:
+        pad_width = 33
+    elif ptm.SIZE_SZ == 8:
+        pad_width = 31
 
     for sb in range(2, ptm.NBINS + 2, 2):
         if sb_num is not None and sb_num != 0:

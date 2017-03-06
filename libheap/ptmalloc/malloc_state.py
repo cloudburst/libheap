@@ -45,9 +45,9 @@ class malloc_state:
             # a string of raw memory was not provided
             try:
                 if self.SIZE_SZ == 4:
-                    mem = inferior.read_memory(addr, 0x44c)
+                    mem = self.inferior.read_memory(addr, 0x44c)
                 elif self.SIZE_SZ == 8:
-                    mem = inferior.read_memory(addr, 0x880)
+                    mem = self.inferior.read_memory(addr, 0x880)
             except TypeError:
                 print_error("Invalid address specified.")
                 return None
