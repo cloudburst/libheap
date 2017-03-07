@@ -1,8 +1,10 @@
 import struct
-from ..debugger.pygdbpython import get_inferior
-from ..debugger.pygdbpython import get_size_sz
-from ..debugger.pygdbpython import gdb_is_running
-from .malloc_chunk import malloc_chunk
+
+from libheap.debugger.pygdbpython import get_inferior
+from libheap.debugger.pygdbpython import get_size_sz
+from libheap.debugger.pygdbpython import gdb_is_running
+
+from libheap.ptmalloc.malloc_chunk import malloc_chunk
 
 
 class ptmalloc:

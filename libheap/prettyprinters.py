@@ -1,5 +1,5 @@
-from libheap.printutils import color_title, color_value
-
+from libheap.printutils import color_title
+from libheap.printutils import color_value
 
 try:
     import gdb
