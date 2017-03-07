@@ -21,7 +21,6 @@ from libheap.debugger.pygdbpython import get_inferior
 from libheap.printutils import print_error
 from libheap.printutils import print_title
 from libheap.printutils import print_header
-from libheap.printutils import print_value
 
 from libheap.prettyprinters import pretty_print_heap_lookup
 
@@ -78,7 +77,7 @@ class heap(gdb.Command):
             print("Specify an arena address")
             print_header("{:<15}".format("-c"))
             print("Print compact arena listing (all chunks)")
-            print_header("{:<15}".format("-l"))
+            print_header("{:<15}".format("heapls"))
             print("Print a flat listing of all chunks in an arena")
             print_header("{:<15}".format("fastbins [#]"))
             print("Print all fast bins, or only a single fast bin")
@@ -92,7 +91,7 @@ class heap(gdb.Command):
             # print("Print the layout of a particular free bin")
             return
 
-        a_found = p_l = p_c = 0
+        a_found = p_c = 0
         for item in arg.split():
             if a_found == 1:
                 arena_address = int(item, 16)
@@ -101,8 +100,6 @@ class heap(gdb.Command):
             if item.find("-a") != -1:
                 a_found = 1
                 arena_address = 0
-            if item.find("l") != -1:
-                p_l = 1
             if item.find("c") != -1:
                 p_c = 1
 
@@ -212,9 +209,6 @@ class heap(gdb.Command):
 
         sbrk_base = malloc_par(mp_address).sbrk_base
 
-        if p_l:
-            print_flat_listing(ar_ptr, sbrk_base)
-            print("")
         if p_c:
             print_compact_listing(ar_ptr, sbrk_base)
             print("")
@@ -261,58 +255,6 @@ def read_proc_maps(pid):
         return -1, -1
 
     return libc_end, heap_begin
-
-
-###############################################################################
-def print_flat_listing(ar_ptr, sbrk_base):
-    "print a flat listing of an arena, modified from jp and arena.c"
-
-    if ptm.SIZE_SZ == 0:
-        ptm.set_globals()
-
-    # print_title("{:>15}".format("flat heap listing"), end="\n")
-    print_title("{:>15}{:>17}{:>18}".format("ADDR", "SIZE", "STATUS"),
-                end="\n")
-    print("{:11}".format("sbrk_base"), end="")
-    print_value("{:#x}".format(int(sbrk_base)), end="\n")
-
-    p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
-
-    while(1):
-        print("{:11}".format("chunk"), end="")
-        print_value("{: <#17x}".format(int(p.address)), end="")
-        print("{: <#16x}".format(int(ptm.chunksize(p))), end="")
-
-        if p.address == ptm.top(ar_ptr):
-            print("(top)")
-            break
-        elif p.size == (0 | ptm.PREV_INUSE):
-            print("(fence)")
-            break
-
-        if ptm.inuse(p):
-            print("(inuse)")
-        else:
-            p = malloc_chunk(p.address, inuse=False)
-            print("(F) FD ", end="")
-            print_value("{:#x} ".format(int(p.fd)))
-            print("BK ", end="")
-            print_value("{:#x} ".format(int(p.bk)))
-
-            if ((p.fd == ar_ptr.last_remainder)
-               and (p.bk == ar_ptr.last_remainder)
-               and (ar_ptr.last_remainder != 0)):
-                print("(LR)")
-            elif ((p.fd == p.bk) & ~ptm.inuse(p)):
-                print("(LC)")
-            else:
-                print("")
-
-        p = malloc_chunk(ptm.next_chunk(p), inuse=True, read_data=False)
-
-    sbrk_end = int(sbrk_base + ar_ptr.max_system_mem)
-    print("{:11}".format("sbrk_end"), end="")
-    print_value("{:#x}".format(sbrk_end), end="")
 
 
 ###############################################################################
