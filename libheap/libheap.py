@@ -77,8 +77,6 @@ class heap(gdb.Command):
             print("Options:", end="\n\n")
             print_header("{:<14}".format("-a 0x1234"))
             print("Specify an arena address")
-            print_header("{:<14}".format("-b"))
-            print("Print compact bin listing (only free chunks)")
             print_header("{:<14}".format("-c"))
             print("Print compact arena listing (all chunks)")
             print_header("{:<14}".format("-l"))
@@ -87,13 +85,15 @@ class heap(gdb.Command):
             print("Print all small bins, or only a single small bin")
             print_header("{:<14}".format("fastbins [#]"))
             print("Print all fast bins, or only a single fast bin")
+            print_header("{:<14}".format("freebins"))
+            print("Print compact bin listing (only free chunks)")
             print_header("{:<14}".format("mstats"), end="")
             print("Print memory alloc statistics similar to malloc_stats(3)")
             # print_header("{:<22}".format("print_bin_layout [#]"), end="")
             # print("Print the layout of a particular free bin")
             return
 
-        a_found = s_found = p_sb = p_b = p_l = p_c = 0
+        a_found = s_found = p_sb = p_l = p_c = 0
         for item in arg.split():
             if a_found == 1:
                 arena_address = int(item, 16)
@@ -113,8 +113,6 @@ class heap(gdb.Command):
                 s_found = 1
                 sb_number = None
                 p_sb = 1
-            if item.find("b") != -1:
-                p_b = 1
             if item.find("l") != -1:
                 p_l = 1
             if item.find("c") != -1:
@@ -197,11 +195,6 @@ class heap(gdb.Command):
 
             return
 
-        try:
-            fb_base = ar_ptr.address.cast(gdb.lookup_type("unsigned long")) + 8
-        except:
-            fb_base = ar_ptr.address + 8
-
         if ptm.SIZE_SZ == 4:
             try:
                 sb_base = ar_ptr.address.cast(gdb.lookup_type(
@@ -246,9 +239,6 @@ class heap(gdb.Command):
 
         if p_sb:
             print_smallbins(inferior, sb_base, sb_number)
-            print("")
-        if p_b:
-            print_bins(inferior, fb_base, sb_base)
             print("")
         if p_l:
             print_flat_listing(ar_ptr, sbrk_base)
@@ -348,79 +338,6 @@ def print_smallbins(inferior, sb_base, sb_num):
 
         if sb_num is not None:  # only print one smallbin
             return
-
-
-###############################################################################
-def print_bins(inferior, fb_base, sb_base):
-    "walk and print the nonempty free bins, modified from jp"
-
-    if ptm.SIZE_SZ == 0:
-        ptm.set_globals()
-
-    # print_title("Heap Dump")
-
-    for fb in range(0, ptm.NFASTBINS):
-        print_once = True
-        p = malloc_chunk(fb_base - (2 * ptm.SIZE_SZ) + fb * ptm.SIZE_SZ,
-                         inuse=False)
-
-        while (p.fd != 0):
-            if p.fd is None:
-                break
-
-            if print_once:
-                print_once = False
-                if fb > 0:
-                    print("")
-                print_header("fast bin {}".format(fb), end="")
-                print(" @ ", end="")
-                print_value("{:#x}".format(p.fd), end="")
-
-            print("\n\tfree chunk @ ", end="")
-            print_value("{:#x} ".format(int(p.fd)))
-            print("- size ", end="")
-            p = malloc_chunk(p.fd, inuse=False)
-            print("{:#x}".format(int(ptm.chunksize(p))), end="")
-
-    for i in range(1, ptm.NBINS):
-        print_once = True
-        b = sb_base + i * 2 * ptm.SIZE_SZ - 4 * ptm.SIZE_SZ
-        p = malloc_chunk(ptm.first(malloc_chunk(b, inuse=False)), inuse=False)
-
-        while p.address != int(b):
-            if print_once:
-                print("")
-                print_once = False
-                if i == 1:
-                    try:
-                        print_header("unsorted bin", end="")
-                        print(" @ ", end="")
-                        cast_val = b.cast(gdb.lookup_type("unsigned long"))
-                        print_value("{:#x}".format(int(cast_val + 2
-                                    * ptm.SIZE_SZ)), end="")
-                    except:
-                        print_header("unsorted bin", end="")
-                        print(" @ ", end="")
-                        print_value("{:#x}".format(int(b + 2
-                                    * ptm.SIZE_SZ)), end="")
-                else:
-                    try:
-                        print_header("small bin {}".format(i))
-                        print(" @ ", end="")
-                        cast_val = b.cast(gdb.lookup_type("unsigned long"))
-                        print_value("{:#x}".format(int(cast_val + 2
-                                    * ptm.SIZE_SZ)), end="")
-                    except:
-                        print_header("small bin {}".format(i))
-                        print(" @ ", end="")
-                        print_value("{:#x}".format(int(b + 2
-                                    * ptm.SIZE_SZ)), end="")
-
-            print("\n\tfree chunk @ ", end="")
-            print_value("{:#x} ".format(int(p.address)))
-            print("- size ", end="")
-            print("{:#x}".format(int(ptm.chunksize(p))), end="")
-            p = malloc_chunk(ptm.first(p), inuse=False)
 
 
 ###############################################################################
