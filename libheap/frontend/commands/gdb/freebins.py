@@ -34,9 +34,6 @@ class freebins(gdb.Command):
         if ptm.SIZE_SZ == 0:
             ptm.set_globals()
 
-        if ptm.SIZE_SZ == 0:
-            ptm.set_globals()
-
         # XXX: from old heap command, replace
         main_arena = gdb.selected_frame().read_var('main_arena')
         arena_address = main_arena.address
