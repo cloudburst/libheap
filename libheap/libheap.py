@@ -302,64 +302,6 @@ def read_proc_maps(pid):
 
 
 ###############################################################################
-def print_fastbins(inferior, fb_base, fb_num):
-    "walk and print the fast bins"
-
-    if ptm.SIZE_SZ == 0:
-        ptm.set_globals()
-
-    print_title("fastbins", end="")
-
-    if ptm.SIZE_SZ == 4:
-        pad_width = 32
-    elif ptm.SIZE_SZ == 8:
-        pad_width = 29
-
-    for fb in range(0, ptm.NFASTBINS):
-        if fb_num is not None:
-            fb = fb_num
-
-        offset = int(fb_base + fb * ptm.SIZE_SZ)
-        try:
-            mem = inferior.read_memory(offset, ptm.SIZE_SZ)
-            if ptm.SIZE_SZ == 4:
-                fd = struct.unpack("<I", mem)[0]
-            elif ptm.SIZE_SZ == 8:
-                fd = struct.unpack("<Q", mem)[0]
-        except RuntimeError:
-            print_error("Invalid fastbin addr {0:#x}".format(offset))
-            return
-
-        print("")
-        print("[ fb {} ] ".format(fb), end="")
-        print("{:#x}{:>{width}}".format(offset, "-> ", width=5), end="")
-        if fd == 0:
-            print("[ {:#x} ] ".format(fd), end="")
-        else:
-            print_value("[ {:#x} ] ".format(fd))
-
-        if fd != 0:  # fastbin is not empty
-            fb_size = ((ptm.MIN_CHUNK_SIZE) + (ptm.MALLOC_ALIGNMENT) * fb)
-            print("({})".format(int(fb_size)), end="")
-
-            chunk = malloc_chunk(fd, inuse=False)
-            while chunk.fd != 0:
-                if chunk.fd is None:
-                    # could not read memory section
-                    break
-
-                print_value("\n{:>{width}} {:#x} {} ".format("[", chunk.fd,
-                                                             "]",
-                                                             width=pad_width))
-                print("({})".format(fb_size), end="")
-
-                chunk = malloc_chunk(chunk.fd, inuse=False)
-
-        if fb_num is not None:  # only print one fastbin
-            return
-
-
-###############################################################################
 def print_smallbins(inferior, sb_base, sb_num):
     "walk and print the small bins"
 
