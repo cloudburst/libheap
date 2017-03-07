@@ -8,7 +8,6 @@ except ImportError:
     sys.exit()
 
 from libheap.printutils import print_title
-from libheap.printutils import print_value
 
 from libheap.ptmalloc.ptmalloc import ptmalloc
 
@@ -21,15 +20,15 @@ from libheap.debugger.pygdbpython import read_variable
 from libheap.debugger.pygdbpython import get_heap_address
 
 
-class heapls(gdb.Command):
-    """Print a flat listing of an arena"""
+class heaplsc(gdb.Command):
+    """Print compact arena layout (all chunks)"""
 
     def __init__(self):
-        super(heapls, self).__init__("heapls", gdb.COMMAND_USER,
-                                     gdb.COMPLETE_NONE)
+        super(heaplsc, self).__init__("heaplsc", gdb.COMMAND_USER,
+                                      gdb.COMPLETE_NONE)
 
     def invoke(self, arg, from_tty):
-        """Inspired by jp's phrack print and arena.c"""
+        """Inspired by jp's phrack print"""
 
         ptm = ptmalloc()
         inferior = get_inferior()
@@ -49,47 +48,26 @@ class heapls(gdb.Command):
         start, end = get_heap_address(mp)
         sbrk_base = start
 
-        # print_title("{:>15}".format("flat heap listing"), end="\n")
-        print_title("{:>15}{:>17}{:>18}".format("ADDR", "SIZE", "STATUS"),
-                    end="\n")
-        print("{:11}".format("sbrk_base"), end="")
-        print_value("{:#x}".format(int(sbrk_base)), end="\n")
-
+        print_title("compact arena layout")
         p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
 
         while(1):
-            print("{:11}".format("chunk"), end="")
-            print_value("{: <#17x}".format(int(p.address)), end="")
-            print("{: <#16x}".format(int(ptm.chunksize(p))), end="")
-
             if p.address == ptm.top(ar_ptr):
-                print("(top)")
-                break
-            elif p.size == (0 | ptm.PREV_INUSE):
-                print("(fence)")
+                print("|T|", end="")
                 break
 
             if ptm.inuse(p):
-                print("(inuse)")
+                print("|A|", end="")
             else:
                 p = malloc_chunk(p.address, inuse=False)
-                print("(F) FD ", end="")
-                print_value("{:#x} ".format(int(p.fd)))
-                print("BK ", end="")
-                print_value("{:#x} ".format(int(p.bk)))
 
                 if ((p.fd == ar_ptr.last_remainder)
                    and (p.bk == ar_ptr.last_remainder)
                    and (ar_ptr.last_remainder != 0)):
-                    print("(LR)")
-                elif ((p.fd == p.bk) & ~ptm.inuse(p)):
-                    print("(LC)")
+                    print("|L|", end="")
                 else:
-                    print("")
+                    print("|%d|" % ptm.bin_index(p.size), end="")
 
             p = malloc_chunk(ptm.next_chunk(p), inuse=True, read_data=False)
 
-        sbrk_end = int(sbrk_base + ar_ptr.max_system_mem)
-        print("{:11}".format("sbrk_end"), end="")
-        print_value("{:#x}".format(sbrk_end), end="")
         print("")

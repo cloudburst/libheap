@@ -11,6 +11,7 @@ from libheap.ptmalloc.malloc_chunk import malloc_chunk
 from libheap.ptmalloc.malloc_state import malloc_state
 
 from libheap.debugger.pygdbpython import get_inferior
+from libheap.debugger.pygdbpython import read_variable
 
 from libheap.printutils import print_error
 from libheap.printutils import print_value
@@ -30,15 +31,17 @@ class mstats(gdb.Command):
         "Specify an optional arena addr: print_mstats main_arena=0x12345"
 
         ptm = ptmalloc()
+        inferior = get_inferior()
 
         if ptm.SIZE_SZ == 0:
             ptm.set_globals()
 
         try:
-            mp = gdb.selected_frame().read_var('mp_')
+            # XXX: add mp_ address guessing via offset without symbols
+            mp = read_variable("mp_")
 
             if arg.find("main_arena") == -1:
-                main_arena = gdb.selected_frame().read_var('main_arena')
+                main_arena = read_variable("main_arena")
                 main_arena_address = main_arena.address
             else:
                 arg = arg.split()
@@ -59,8 +62,6 @@ class mstats(gdb.Command):
         if main_arena_address == 0:
             print_error("Invalid main_arena address (0)")
             return
-
-        inferior = get_inferior()
 
         in_use_b = mp['mmapped_mem']
         system_b = in_use_b

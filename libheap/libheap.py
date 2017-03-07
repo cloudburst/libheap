@@ -12,14 +12,11 @@ from functools import wraps
 
 import libheap.ptmalloc.ptmalloc as ptmalloc
 
-from libheap.ptmalloc.malloc_par import malloc_par
-from libheap.ptmalloc.malloc_chunk import malloc_chunk
 from libheap.ptmalloc.malloc_state import malloc_state
 
 from libheap.debugger.pygdbpython import get_inferior
 
 from libheap.printutils import print_error
-from libheap.printutils import print_title
 from libheap.printutils import print_header
 
 from libheap.prettyprinters import pretty_print_heap_lookup
@@ -75,8 +72,6 @@ class heap(gdb.Command):
             print("Options:", end="\n\n")
             print_header("{:<15}".format("-a 0x1234"))
             print("Specify an arena address")
-            print_header("{:<15}".format("-c"))
-            print("Print compact arena listing (all chunks)")
             print_header("{:<15}".format("heapls"))
             print("Print a flat listing of all chunks in an arena")
             print_header("{:<15}".format("fastbins [#]"))
@@ -85,13 +80,15 @@ class heap(gdb.Command):
             print("Print all small bins, or only a single small bin")
             print_header("{:<15}".format("freebins"))
             print("Print compact bin listing (only free chunks)")
+            print_header("{:<15}".format("heaplsc"))
+            print("Print compact arena listing (all chunks)")
             print_header("{:<15}".format("mstats"), end="")
             print("Print memory alloc statistics similar to malloc_stats(3)")
             # print_header("{:<22}".format("print_bin_layout [#]"), end="")
             # print("Print the layout of a particular free bin")
             return
 
-        a_found = p_c = 0
+        a_found = 0
         for item in arg.split():
             if a_found == 1:
                 arena_address = int(item, 16)
@@ -100,8 +97,6 @@ class heap(gdb.Command):
             if item.find("-a") != -1:
                 a_found = 1
                 arena_address = 0
-            if item.find("c") != -1:
-                p_c = 1
 
         if arg.find("-a") == -1:
             try:
@@ -180,39 +175,6 @@ class heap(gdb.Command):
 
             return
 
-        try:
-            mp_ = gdb.selected_frame().read_var('mp_')
-            mp_address = mp_.address
-        except RuntimeError:
-            print_error("No gdb frame is currently selected.")
-            return
-        except ValueError:
-            try:
-                res = gdb.execute('x/x &mp_', to_string=True)
-                mp_address = int(res.strip().split()[0], 16)
-            except gdb.error:
-                print_error("Debug glibc could not be found.")
-                print_error("Guessing mp_ address via offset from main_arena.")
-
-                if ptm.SIZE_SZ == 4:
-                    try:
-                        mp_address = ar_ptr.address.cast(
-                            gdb.lookup_type("unsigned long")) + 0x460
-                    except:
-                        mp_address = ar_ptr.address + 0x460
-                elif ptm.SIZE_SZ == 8:  # offset 0x880 untested on 64bit
-                    try:
-                        mp_address = ar_ptr.address.cast(
-                            gdb.lookup_type("unsigned long")) + 0x880
-                    except:
-                        mp_address = ar_ptr.address + 0x460
-
-        sbrk_base = malloc_par(mp_address).sbrk_base
-
-        if p_c:
-            print_compact_listing(ar_ptr, sbrk_base)
-            print("")
-
 
 ############################################################################
 def read_proc_maps(pid):
@@ -256,36 +218,7 @@ def read_proc_maps(pid):
 
     return libc_end, heap_begin
 
-
 ###############################################################################
-def print_compact_listing(ar_ptr, sbrk_base):
-    "print a compact layout of the heap, modified from jp"
-
-    if ptm.SIZE_SZ == 0:
-        ptm.set_globals()
-
-    print_title("compact dump")
-    p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
-
-    while(1):
-        if p.address == ptm.top(ar_ptr):
-            print("|T|", end="")
-            break
-
-        if ptm.inuse(p):
-            print("|A|", end="")
-        else:
-            p = malloc_chunk(p.address, inuse=False)
-
-            if ((p.fd == ar_ptr.last_remainder)
-               and (p.bk == ar_ptr.last_remainder)
-               and (ar_ptr.last_remainder != 0)):
-                print("|L|", end="")
-            else:
-                print("|%d|" % ptm.bin_index(p.size), end="")
-
-        p = malloc_chunk(ptm.next_chunk(p), inuse=True, read_data=False)
-
 
 # Register GDB Commands
 heap()

@@ -20,11 +20,11 @@ A number of different functions exist to print the overall state of the heap as 
     "heap" Options:
 
     -a 0x1234      Specify an arena address
-    -c             Print compact arena listing (all chunks)
     heapls         Print a flat listing of all chunks in an arena
     fastbins [#]   Print all fast bins, or only a single fast bin
     smallbins [#]  Print all small bins, or only a single small bin
     freebins       Print compact bin listing (only free chunks)
+    heaplsc        Print compact arena listing (all chunks)
     mstats         Print memory alloc statistics similar to malloc_stats(3)
 
 #### heap
@@ -71,9 +71,9 @@ A number of different functions exist to print the overall state of the heap as 
     chunk      0x603150         0x20eb0      (top)
     sbrk_end   0x624008
 
-#### heap -c
-    (gdb) heap -c
-    compact dump
+#### heaplsc
+    (gdb) heaplsc
+    compact arena layout
     |A||11||A||11||A||T|
 
 ### Chunks
