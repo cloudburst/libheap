@@ -17,9 +17,6 @@ A number of different functions exist to print the overall state of the heap as 
 
 #### heap -h
     (gdb) heap -h
-    "heap" Options:
-
-    -a 0x1234      Specify an arena address
     heapls         Print a flat listing of all chunks in an arena
     fastbins [#]   Print all fast bins, or only a single fast bin
     smallbins [#]  Print all small bins, or only a single small bin

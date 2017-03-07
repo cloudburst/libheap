@@ -1,3 +1,4 @@
+from libheap.frontend.commands.gdb.heap import heap
 from libheap.frontend.commands.gdb.mstats import mstats
 from libheap.frontend.commands.gdb.heapls import heapls
 from libheap.frontend.commands.gdb.heaplsc import heaplsc
@@ -11,6 +12,7 @@ class frontend_gdb:
     """Register commands with GDB"""
 
     def __init__(self):
+        heap()
         mstats()
         heapls()
         heaplsc()
