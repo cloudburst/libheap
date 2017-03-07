@@ -19,13 +19,13 @@ A number of different functions exist to print the overall state of the heap as 
     (gdb) heap -h
     "heap" Options:
 
-    -a 0x1234   Specify an arena address
-    -b          Print compact bin listing (only free chunks)
-    -c          Print compact arena listing (all chunks)
-    -l          Print a flat listing of all chunks in an arena
-    -f [#]      Print all fast bins, or only a single fast bin
-    -s [#]      Print all small bins, or only a single small bin
-    mstats      Print memory alloc statistics similar to malloc_stats(3)
+    -a 0x1234     Specify an arena address
+    -b            Print compact bin listing (only free chunks)
+    -c            Print compact arena listing (all chunks)
+    -l            Print a flat listing of all chunks in an arena
+    -s [#]        Print all small bins, or only a single small bin
+    fastbins [#]  Print all fast bins, or only a single fast bin
+    mstats        Print memory alloc statistics similar to malloc_stats(3)
 
 #### heap
     (gdb) heap
@@ -39,8 +39,8 @@ A number of different functions exist to print the overall state of the heap as 
     unsorted bin @ 0xf2f3d8
         free_chunk @ 0x804b010 - size 0x88
 
-#### heap -f
-    (gdb) heap -f
+#### fastbins
+    (gdb) fastbins
     fastbins
     [ fb  0 ] 0xf2f3a8 -> [ 0x0804b000 ] (16)
     [ fb  1 ] 0xf2f3ac -> [ 0x00000000 ]

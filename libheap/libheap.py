@@ -83,28 +83,21 @@ class heap(gdb.Command):
             print("Print compact arena listing (all chunks)")
             print_header("{:<14}".format("-l"))
             print("Print a flat listing of all chunks in an arena")
-            print_header("{:<14}".format("-f [#]"))
-            print("Print all fast bins, or only a single fast bin")
             print_header("{:<14}".format("-s [#]"))
             print("Print all small bins, or only a single small bin")
+            print_header("{:<14}".format("fastbins [#]"))
+            print("Print all fast bins, or only a single fast bin")
             print_header("{:<14}".format("mstats"), end="")
             print("Print memory alloc statistics similar to malloc_stats(3)")
             # print_header("{:<22}".format("print_bin_layout [#]"), end="")
             # print("Print the layout of a particular free bin")
             return
 
-        a_found = f_found = s_found = p_fb = p_sb = p_b = p_l = p_c = 0
+        a_found = s_found = p_sb = p_b = p_l = p_c = 0
         for item in arg.split():
             if a_found == 1:
                 arena_address = int(item, 16)
                 a_found = 0
-                continue
-            if f_found == 1:
-                f_found = 0
-                try:
-                    fb_number = int(item)
-                except:
-                    pass
                 continue
             if s_found == 1:
                 s_found = 0
@@ -116,10 +109,6 @@ class heap(gdb.Command):
             if item.find("-a") != -1:
                 a_found = 1
                 arena_address = 0
-            if item.find("f") != -1:
-                f_found = 1
-                fb_number = None
-                p_fb = 1
             if item.find("s") != -1:
                 s_found = 1
                 sb_number = None
@@ -212,6 +201,7 @@ class heap(gdb.Command):
             fb_base = ar_ptr.address.cast(gdb.lookup_type("unsigned long")) + 8
         except:
             fb_base = ar_ptr.address + 8
+
         if ptm.SIZE_SZ == 4:
             try:
                 sb_base = ar_ptr.address.cast(gdb.lookup_type(
@@ -254,9 +244,6 @@ class heap(gdb.Command):
 
         sbrk_base = malloc_par(mp_address).sbrk_base
 
-        if p_fb:
-            print_fastbins(inferior, fb_base, fb_number)
-            print("")
         if p_sb:
             print_smallbins(inferior, sb_base, sb_number)
             print("")
