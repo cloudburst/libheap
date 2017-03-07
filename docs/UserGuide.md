@@ -19,13 +19,13 @@ A number of different functions exist to print the overall state of the heap as 
     (gdb) heap -h
     "heap" Options:
 
-    -a 0x1234     Specify an arena address
-    -c            Print compact arena listing (all chunks)
-    -l            Print a flat listing of all chunks in an arena
-    -s [#]        Print all small bins, or only a single small bin
-    fastbins [#]  Print all fast bins, or only a single fast bin
-    freebins      Print compact bin listing (only free chunks)
-    mstats        Print memory alloc statistics similar to malloc_stats(3)
+    -a 0x1234      Specify an arena address
+    -c             Print compact arena listing (all chunks)
+    -l             Print a flat listing of all chunks in an arena
+    fastbins [#]   Print all fast bins, or only a single fast bin
+    smallbins [#]  Print all small bins, or only a single small bin
+    freebins       Print compact bin listing (only free chunks)
+    mstats         Print memory alloc statistics similar to malloc_stats(3)
 
 #### heap
     (gdb) heap
@@ -53,23 +53,23 @@ A number of different functions exist to print the overall state of the heap as 
     [ fb  8 ] 0xf2f3c8 -> [ 0x00000000 ]
     [ fb  9 ] 0xf2f3cc -> [ 0x00000000 ]
 
-#### heap -s
-    (gdb) heap -s 1
+#### smallbins
+    (gdb) smallbins 1
     smallbins
     [ sb 01 ] 0xf2f3d8 -> [ 0x0804b010 | 0x0804b010 ]
                           [ 0x00f2f3d0 | 0x00f2f3d0 ]  (136)
 
 #### heap -l
     (gdb) heap -l
-              ADDR             SIZE         STATUS
-    sbrk_base 0x602c00
-    chunk     0x602c00         0x110        (inuse)
-    chunk     0x602d10         0x110        (F) FD 75dea366deb8 BK 602f30
-    chunk     0x602e20         0x110        (inuse)
-    chunk     0x602f30         0x110        (F) FD 602d10 BK 75dea366deb8
-    chunk     0x603040         0x110        (inuse)
-    chunk     0x603150         0x20eb0      (top)
-    sbrk_end  0x624008
+               ADDR             SIZE         STATUS
+    sbrk_base  0x602c00
+    chunk      0x602c00         0x110        (inuse)
+    chunk      0x602d10         0x110        (F) FD 75dea366deb8 BK 602f30
+    chunk      0x602e20         0x110        (inuse)
+    chunk      0x602f30         0x110        (F) FD 602d10 BK 75dea366deb8
+    chunk      0x603040         0x110        (inuse)
+    chunk      0x603150         0x20eb0      (top)
+    sbrk_end   0x624008
 
 #### heap -c
     (gdb) heap -c

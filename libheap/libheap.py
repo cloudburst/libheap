@@ -8,7 +8,6 @@ except ImportError:
     print("Not running inside of GDB, exiting...")
     sys.exit()
 
-import struct
 from functools import wraps
 
 import libheap.ptmalloc.ptmalloc as ptmalloc
@@ -75,44 +74,33 @@ class heap(gdb.Command):
             # print_title("libheap help")
             print_header("\"heap\" ", end="")
             print("Options:", end="\n\n")
-            print_header("{:<14}".format("-a 0x1234"))
+            print_header("{:<15}".format("-a 0x1234"))
             print("Specify an arena address")
-            print_header("{:<14}".format("-c"))
+            print_header("{:<15}".format("-c"))
             print("Print compact arena listing (all chunks)")
-            print_header("{:<14}".format("-l"))
+            print_header("{:<15}".format("-l"))
             print("Print a flat listing of all chunks in an arena")
-            print_header("{:<14}".format("-s [#]"))
-            print("Print all small bins, or only a single small bin")
-            print_header("{:<14}".format("fastbins [#]"))
+            print_header("{:<15}".format("fastbins [#]"))
             print("Print all fast bins, or only a single fast bin")
-            print_header("{:<14}".format("freebins"))
+            print_header("{:<15}".format("smallbins [#]"))
+            print("Print all small bins, or only a single small bin")
+            print_header("{:<15}".format("freebins"))
             print("Print compact bin listing (only free chunks)")
-            print_header("{:<14}".format("mstats"), end="")
+            print_header("{:<15}".format("mstats"), end="")
             print("Print memory alloc statistics similar to malloc_stats(3)")
             # print_header("{:<22}".format("print_bin_layout [#]"), end="")
             # print("Print the layout of a particular free bin")
             return
 
-        a_found = s_found = p_sb = p_l = p_c = 0
+        a_found = p_l = p_c = 0
         for item in arg.split():
             if a_found == 1:
                 arena_address = int(item, 16)
                 a_found = 0
                 continue
-            if s_found == 1:
-                s_found = 0
-                try:
-                    sb_number = int(item)
-                except:
-                    pass
-                continue
             if item.find("-a") != -1:
                 a_found = 1
                 arena_address = 0
-            if item.find("s") != -1:
-                s_found = 1
-                sb_number = None
-                p_sb = 1
             if item.find("l") != -1:
                 p_l = 1
             if item.find("c") != -1:
@@ -195,19 +183,6 @@ class heap(gdb.Command):
 
             return
 
-        if ptm.SIZE_SZ == 4:
-            try:
-                sb_base = ar_ptr.address.cast(gdb.lookup_type(
-                    "unsigned long"))+56
-            except:
-                sb_base = ar_ptr.address + 56
-        elif ptm.SIZE_SZ == 8:
-            try:
-                sb_base = ar_ptr.address.cast(
-                    gdb.lookup_type("unsigned long")) + 104
-            except:
-                sb_base = ar_ptr.address + 104
-
         try:
             mp_ = gdb.selected_frame().read_var('mp_')
             mp_address = mp_.address
@@ -237,9 +212,6 @@ class heap(gdb.Command):
 
         sbrk_base = malloc_par(mp_address).sbrk_base
 
-        if p_sb:
-            print_smallbins(inferior, sb_base, sb_number)
-            print("")
         if p_l:
             print_flat_listing(ar_ptr, sbrk_base)
             print("")
@@ -289,55 +261,6 @@ def read_proc_maps(pid):
         return -1, -1
 
     return libc_end, heap_begin
-
-
-###############################################################################
-def print_smallbins(inferior, sb_base, sb_num):
-    "walk and print the small bins"
-
-    if ptm.SIZE_SZ == 0:
-        ptm.set_globals()
-
-    print_title("smallbins", end="")
-
-    if ptm.SIZE_SZ == 4:
-        pad_width = 33
-    elif ptm.SIZE_SZ == 8:
-        pad_width = 31
-
-    for sb in range(2, ptm.NBINS + 2, 2):
-        if sb_num is not None and sb_num != 0:
-            sb = sb_num*2
-
-        offset = sb_base + (sb - 2) * ptm.SIZE_SZ
-        try:
-            mem = inferior.read_memory(offset, 2 * ptm.SIZE_SZ)
-            if ptm.SIZE_SZ == 4:
-                fd, bk = struct.unpack("<II", mem)
-            elif ptm.SIZE_SZ == 8:
-                fd, bk = struct.unpack("<QQ", mem)
-        except RuntimeError:
-            print_error("Invalid smallbin addr {0:#x}".format(offset))
-            return
-
-        print("")
-        print("[ sb {:02} ] ".format(int(sb / 2)), end="")
-        print("{:#x}{:>{width}}".format(int(offset), "-> ", width=5), end="")
-        print_value("[ {:#x} | {:#x} ] ".format(int(fd), int(bk)))
-
-        while (1):
-            if fd == (offset - 2 * ptm.SIZE_SZ):
-                break
-
-            chunk = malloc_chunk(fd, inuse=False)
-            print("")
-            print_value("{:>{width}}{:#x} | {:#x} ] ".format(
-                        "[ ", int(chunk.fd), int(chunk.bk), width=pad_width))
-            print("({})".format(int(ptm.chunksize(chunk))), end="")
-            fd = chunk.fd
-
-        if sb_num is not None:  # only print one smallbin
-            return
 
 
 ###############################################################################
