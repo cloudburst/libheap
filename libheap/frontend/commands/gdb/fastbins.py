@@ -19,6 +19,7 @@ from libheap.ptmalloc.malloc_state import malloc_state
 from libheap.ptmalloc.malloc_chunk import malloc_chunk
 
 from libheap.debugger.pygdbpython import get_inferior
+from libheap.debugger.pygdbpython import read_variable
 
 
 class fastbins(gdb.Command):
@@ -36,12 +37,12 @@ class fastbins(gdb.Command):
             ptm.set_globals()
 
         if ptm.SIZE_SZ == 4:
-            pad_width = 32
+            pad_width = 25
         elif ptm.SIZE_SZ == 8:
             pad_width = 29
 
         # XXX: from old heap command, replace
-        main_arena = gdb.selected_frame().read_var('main_arena')
+        main_arena = read_variable("main_arena")
         arena_address = main_arena.address
         ar_ptr = malloc_state(arena_address, inferior=inferior)
         # 8 bytes into struct malloc_state on both 32/64bit

@@ -74,8 +74,9 @@ def read_variable(variable=None):
     try:
         return gdb.selected_frame().read_var(variable)
     except RuntimeError:
-        print_error("No gdb frame is currently selected.")
-        return None
+        # No idea why this works but sometimes the frame is not yet selected
+        print_error("No gdb frame is currently selected.\n")
+        return gdb.selected_frame().read_var(variable)
 
 
 @gdb_is_running

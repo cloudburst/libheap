@@ -16,6 +16,8 @@ from libheap.printutils import print_value
 
 from libheap.ptmalloc.ptmalloc import ptmalloc
 
+from libheap.debugger.pygdbpython import read_variable
+
 
 class print_bin_layout(gdb.Command):
     "dump the layout of a free bin"
@@ -39,9 +41,10 @@ class print_bin_layout(gdb.Command):
 
         try:
             if arg.find("main_arena") == -1:
-                main_arena = gdb.selected_frame().read_var('main_arena')
+                main_arena = read_variable("main_arena")
                 main_arena_address = main_arena.address
             else:
+                # XXX: fixme
                 arg = arg.split()
                 for item in arg:
                     if item.find("main_arena") != -1:
