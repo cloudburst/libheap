@@ -86,7 +86,10 @@ class smallbins(gdb.Command):
             print("[ sb {:02} ] ".format(int(sb / 2)), end="")
             print("{:#x}{:>{width}}".format(int(offset), "-> ", width=5),
                   end="")
-            print_value("[ {:#x} | {:#x} ] ".format(int(fd), int(bk)))
+            if fd == (offset - 2 * ptm.SIZE_SZ):
+                print("[ {:#x} | {:#x} ] ".format(int(fd), int(bk)), end="")
+            else:
+                print_value("[ {:#x} | {:#x} ] ".format(int(fd), int(bk)))
 
             while (1):
                 if fd == (offset - 2 * ptm.SIZE_SZ):
