@@ -179,7 +179,9 @@ There are also included pretty printers for struct malloc_par and struct malloc_
 
 Python classes also exist for these two important structures so you can examine arbitrary memory using them:
 
-    (gdb) python print malloc_state(0x6503d0b37e60)
+    (gdb) python p = pyptmalloc()
+    (gdb) python ms = ptmalloc.malloc_state.malloc_state(0x6503d0b37e60, debugger=p.debugger)
+    (gdb) python print(ms)
     struct malloc_state {
     mutex          = 0x0
     flags          = 0x1
@@ -193,7 +195,9 @@ Python classes also exist for these two important structures so you can examine 
     max_system_mem = 0x21890
 
 
-    (gdb) python print malloc_par(0x6cb800)
+    (gdb) python p = pyptmalloc()
+    (gdb) python mp = ptmalloc.malloc_par.malloc_par(0x6cb800, debugger=p.debugger)
+    (gdb) python print(mp)
     struct malloc_par {
     trim_threshold   = 0x9e000
     top_pad          = 0x20000
