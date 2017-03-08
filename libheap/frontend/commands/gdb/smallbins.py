@@ -1,37 +1,39 @@
 from __future__ import print_function
 
+import sys
 import struct
 
 try:
     import gdb
 except ImportError:
     print("Not running inside of GDB, exiting...")
-    import sys
     sys.exit()
-
-from libheap.printutils import print_value
-from libheap.printutils import print_title
-from libheap.printutils import print_error
 
 from libheap.ptmalloc.ptmalloc import ptmalloc
 
+from libheap.frontend.printutils import print_value
+from libheap.frontend.printutils import print_title
+from libheap.frontend.printutils import print_error
+
 from libheap.ptmalloc.malloc_chunk import malloc_chunk
 from libheap.ptmalloc.malloc_state import malloc_state
-
-from libheap.debugger.pygdbpython import get_inferior
-from libheap.debugger.pygdbpython import read_variable
 
 
 class smallbins(gdb.Command):
     """Walk and print the small bins."""
 
-    def __init__(self):
+    def __init__(self, debugger=None):
         super(smallbins, self).__init__("smallbins", gdb.COMMAND_USER,
                                         gdb.COMPLETE_NONE)
 
+        if debugger is not None:
+            self.dbg = debugger
+        else:
+            print_error("Please specify a debugger")
+            sys.exit()
+
     def invoke(self, arg, from_tty):
-        ptm = ptmalloc()
-        inferior = get_inferior()
+        ptm = ptmalloc(debugger=self.dbg)
 
         if ptm.SIZE_SZ == 0:
             ptm.set_globals()
@@ -42,9 +44,9 @@ class smallbins(gdb.Command):
             pad_width = 31
 
         # XXX: from old heap command, replace
-        main_arena = read_variable("main_arena")
+        main_arena = self.dbg.read_variable("main_arena")
         arena_address = main_arena.address
-        ar_ptr = malloc_state(arena_address, inferior=inferior)
+        ar_ptr = malloc_state(arena_address, debugger=self.dbg)
 
         # mchunkptr bins in struct malloc_state
         if ptm.SIZE_SZ == 4:
@@ -71,7 +73,7 @@ class smallbins(gdb.Command):
 
             offset = sb_base + (sb - 2) * ptm.SIZE_SZ
             try:
-                mem = inferior.read_memory(offset, 2 * ptm.SIZE_SZ)
+                mem = self.dbg.read_memory(offset, 2 * ptm.SIZE_SZ)
                 if ptm.SIZE_SZ == 4:
                     fd, bk = struct.unpack("<II", mem)
                 elif ptm.SIZE_SZ == 8:
@@ -90,7 +92,7 @@ class smallbins(gdb.Command):
                 if fd == (offset - 2 * ptm.SIZE_SZ):
                     break
 
-                chunk = malloc_chunk(fd, inuse=False)
+                chunk = malloc_chunk(fd, inuse=False, debugger=self.dbg)
                 print("")
                 print_value("{:>{width}}{:#x} | {:#x} ] ".format("[ ",
                             int(chunk.fd), int(chunk.bk), width=pad_width))

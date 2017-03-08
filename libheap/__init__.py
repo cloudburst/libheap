@@ -1,1 +1,3 @@
-__all__ = ["libheap", "printutils"]
+from libheap.pyptmalloc import pyptmalloc
+
+pyptmalloc()

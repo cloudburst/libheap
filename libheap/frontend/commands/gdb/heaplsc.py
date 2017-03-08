@@ -1,55 +1,59 @@
 from __future__ import print_function
 
+import sys
+
 try:
     import gdb
 except ImportError:
     print("Not running inside of GDB, exiting...")
-    import sys
     sys.exit()
 
-from libheap.printutils import print_title
-
 from libheap.ptmalloc.ptmalloc import ptmalloc
+
+from libheap.frontend.printutils import print_title
+from libheap.frontend.printutils import print_error
 
 from libheap.ptmalloc.malloc_par import malloc_par
 from libheap.ptmalloc.malloc_state import malloc_state
 from libheap.ptmalloc.malloc_chunk import malloc_chunk
 
-from libheap.debugger.pygdbpython import get_inferior
-from libheap.debugger.pygdbpython import read_variable
-from libheap.debugger.pygdbpython import get_heap_address
-
 
 class heaplsc(gdb.Command):
     """Print compact arena layout (all chunks)"""
 
-    def __init__(self):
+    def __init__(self, debugger=None):
         super(heaplsc, self).__init__("heaplsc", gdb.COMMAND_USER,
                                       gdb.COMPLETE_NONE)
+
+        if debugger is not None:
+            self.dbg = debugger
+        else:
+            print_error("Please specify a debugger")
+            sys.exit()
 
     def invoke(self, arg, from_tty):
         """Inspired by jp's phrack print"""
 
-        ptm = ptmalloc()
-        inferior = get_inferior()
+        ptm = ptmalloc(debugger=self.dbg)
 
         if ptm.SIZE_SZ == 0:
             ptm.set_globals()
 
         # XXX: from old heap command, replace
-        main_arena = read_variable("main_arena")
-        arena_address = main_arena.address
-        ar_ptr = malloc_state(arena_address, inferior=inferior)
+        main_arena = self.dbg.read_variable("main_arena")
+        arena_addr = main_arena.address
+        ar_ptr = malloc_state(arena_addr, debugger=self.dbg)
 
         # XXX: add mp_ address guessing via offset without symbols
-        mp_ = read_variable("mp_")
+        mp_ = self.dbg.read_variable("mp_")
         mp_address = mp_.address
-        mp = malloc_par(mp_address)
-        start, end = get_heap_address(mp)
+        mp = malloc_par(mp_address, debugger=self.dbg)
+        start, end = self.dbg.get_heap_address(mp)
         sbrk_base = start
 
         print_title("compact arena layout")
-        p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
+        p = malloc_chunk(sbrk_base, inuse=True, read_data=False,
+                         debugger=self.dbg)
 
         while(1):
             if p.address == ptm.top(ar_ptr):
@@ -59,7 +63,7 @@ class heaplsc(gdb.Command):
             if ptm.inuse(p):
                 print("|A|", end="")
             else:
-                p = malloc_chunk(p.address, inuse=False)
+                p = malloc_chunk(p.address, inuse=False, debugger=self.dbg)
 
                 if ((p.fd == ar_ptr.last_remainder)
                    and (p.bk == ar_ptr.last_remainder)
@@ -68,6 +72,7 @@ class heaplsc(gdb.Command):
                 else:
                     print("|%d|" % ptm.bin_index(p.size), end="")
 
-            p = malloc_chunk(ptm.next_chunk(p), inuse=True, read_data=False)
+            p = malloc_chunk(ptm.next_chunk(p), inuse=True, read_data=False,
+                             debugger=self.dbg)
 
         print("")

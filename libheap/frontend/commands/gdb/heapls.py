@@ -1,14 +1,16 @@
 from __future__ import print_function
 
+import sys
+
 try:
     import gdb
 except ImportError:
     print("Not running inside of GDB, exiting...")
-    import sys
     sys.exit()
 
-from libheap.printutils import print_title
-from libheap.printutils import print_value
+from libheap.frontend.printutils import print_title
+from libheap.frontend.printutils import print_value
+from libheap.frontend.printutils import print_error
 
 from libheap.ptmalloc.ptmalloc import ptmalloc
 
@@ -16,37 +18,38 @@ from libheap.ptmalloc.malloc_par import malloc_par
 from libheap.ptmalloc.malloc_state import malloc_state
 from libheap.ptmalloc.malloc_chunk import malloc_chunk
 
-from libheap.debugger.pygdbpython import get_inferior
-from libheap.debugger.pygdbpython import read_variable
-from libheap.debugger.pygdbpython import get_heap_address
-
 
 class heapls(gdb.Command):
     """Print a flat listing of an arena"""
 
-    def __init__(self):
+    def __init__(self, debugger=None):
         super(heapls, self).__init__("heapls", gdb.COMMAND_USER,
                                      gdb.COMPLETE_NONE)
+
+        if debugger is not None:
+            self.dbg = debugger
+        else:
+            print_error("Please specify a debugger")
+            sys.exit()
 
     def invoke(self, arg, from_tty):
         """Inspired by jp's phrack print and arena.c"""
 
-        ptm = ptmalloc()
-        inferior = get_inferior()
+        ptm = ptmalloc(debugger=self.dbg)
 
         if ptm.SIZE_SZ == 0:
             ptm.set_globals()
 
         # XXX: from old heap command, replace
-        main_arena = read_variable("main_arena")
+        main_arena = self.dbg.read_variable("main_arena")
         arena_address = main_arena.address
-        ar_ptr = malloc_state(arena_address, inferior=inferior)
+        ar_ptr = malloc_state(arena_address, debugger=self.dbg)
 
         # XXX: add mp_ address guessing via offset without symbols
-        mp_ = read_variable("mp_")
+        mp_ = self.dbg.read_variable("mp_")
         mp_address = mp_.address
-        mp = malloc_par(mp_address)
-        start, end = get_heap_address(mp)
+        mp = malloc_par(mp_address, debugger=self.dbg)
+        start, end = self.dbg.get_heap_address(mp)
         sbrk_base = start
 
         # print_title("{:>15}".format("flat heap listing"), end="\n")
@@ -55,7 +58,8 @@ class heapls(gdb.Command):
         print("{:11}".format("sbrk_base"), end="")
         print_value("{:#x}".format(int(sbrk_base)), end="\n")
 
-        p = malloc_chunk(sbrk_base, inuse=True, read_data=False)
+        p = malloc_chunk(sbrk_base, inuse=True, read_data=False,
+                         debugger=self.dbg)
 
         while(1):
             print("{:11}".format("chunk"), end="")
@@ -72,7 +76,7 @@ class heapls(gdb.Command):
             if ptm.inuse(p):
                 print("(inuse)")
             else:
-                p = malloc_chunk(p.address, inuse=False)
+                p = malloc_chunk(p.address, inuse=False, debugger=self.dbg)
                 print("(F) FD ", end="")
                 print_value("{:#x} ".format(int(p.fd)))
                 print("BK ", end="")
@@ -87,7 +91,8 @@ class heapls(gdb.Command):
                 else:
                     print("")
 
-            p = malloc_chunk(ptm.next_chunk(p), inuse=True, read_data=False)
+            p = malloc_chunk(ptm.next_chunk(p), inuse=True, read_data=False,
+                             debugger=self.dbg)
 
         sbrk_end = int(sbrk_base + ar_ptr.max_system_mem)
         print("{:11}".format("sbrk_end"), end="")

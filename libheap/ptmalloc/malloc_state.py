@@ -1,17 +1,15 @@
+import sys
 import struct
 
-from libheap.printutils import color_title
-from libheap.printutils import color_value
-from libheap.printutils import print_error
-
-from libheap.debugger.pygdbpython import get_inferior
-from libheap.debugger.pygdbpython import get_size_sz
+from libheap.frontend.printutils import color_title
+from libheap.frontend.printutils import color_value
+from libheap.frontend.printutils import print_error
 
 
 class malloc_state:
     "python representation of a struct malloc_state"
 
-    def __init__(self, addr=None, mem=None, inferior=None):
+    def __init__(self, addr=None, mem=None, debugger=None):
         self.mutex = 0
         self.flags = 0
         self.fastbinsY = 0
@@ -32,22 +30,21 @@ class malloc_state:
         else:
             self.address = addr
 
-        if inferior is None and mem is None:
-            self.inferior = get_inferior()
-            if self.inferior == -1:
-                return None
+        if debugger is not None:
+            self.dbg = debugger
         else:
-            self.inferior = inferior
+            print_error("Please specify a debugger")
+            sys.exit()
 
-        self.SIZE_SZ = get_size_sz()
+        self.SIZE_SZ = self.dbg.get_size_sz()
 
         if mem is None:
             # a string of raw memory was not provided
             try:
                 if self.SIZE_SZ == 4:
-                    mem = self.inferior.read_memory(addr, 0x44c)
+                    mem = self.dbg.read_memory(addr, 0x44c)
                 elif self.SIZE_SZ == 8:
-                    mem = self.inferior.read_memory(addr, 0x880)
+                    mem = self.dbg.read_memory(addr, 0x880)
             except TypeError:
                 print_error("Invalid address specified.")
                 return None
@@ -75,11 +72,6 @@ class malloc_state:
              self.max_system_mem) = struct.unpack_from("<QQQ", mem, 0x868)
 
     def write(self, inferior=None):
-        if inferior is None:
-            inferior = self.inferior
-            if inferior == -1:
-                return None
-
         if self.SIZE_SZ == 4:
             mem = struct.pack("<275I", self.mutex, self.flags, self.fastbinsY,
                               self.top, self.last_remainder, self.bins,
@@ -91,7 +83,10 @@ class malloc_state:
                               self.bins, self.binmap, self.next,
                               self.system_mem, self.max_system_mem)
 
-        inferior.write_memory(self.address, mem)
+        if self.dbg is not None:
+            self.dbg.write_memory(self.address, mem)
+        elif inferior is not None:
+            self.inferior.write_memory(self.address, mem)
 
     def __str__(self):
         ms = color_title("struct malloc_state {")

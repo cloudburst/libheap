@@ -1,23 +1,15 @@
-try:
-    import gdb
-except ImportError:
-    print("Not running inside of GDB, exiting...")
-    exit()
-
+import sys
 import struct
 
-from libheap.printutils import color_title
-from libheap.printutils import color_value
-from libheap.printutils import print_error
-
-from libheap.debugger.pygdbpython import get_inferior
-from libheap.debugger.pygdbpython import get_size_sz
+from libheap.frontend.printutils import color_title
+from libheap.frontend.printutils import color_value
+from libheap.frontend.printutils import print_error
 
 
 class malloc_par:
     "python representation of a struct malloc_par"
 
-    def __init__(self, addr=None, mem=None, inferior=None):
+    def __init__(self, addr=None, mem=None, debugger=None):
         self.trim_threshold = 0
         self.top_pad = 0
         self.mmap_threshold = 0
@@ -41,20 +33,21 @@ class malloc_par:
         else:
             self.address = addr
 
-        if inferior is None and mem is None:
-            inferior = get_inferior()
-            if inferior == -1:
-                return None
+        if debugger is not None:
+            self.dbg = debugger
+        else:
+            print_error("Please specify a debugger")
+            sys.exit()
 
-        self.SIZE_SZ = get_size_sz()
+        self.SIZE_SZ = self.dbg.get_size_sz()
 
         if mem is None:
             # a string of raw memory was not provided
             try:
                 if self.SIZE_SZ == 4:
-                    mem = inferior.read_memory(addr, 0x34)
+                    mem = self.dbg.read_memory(addr, 0x34)
                 elif self.SIZE_SZ == 8:
-                    mem = inferior.read_memory(addr, 0x58)
+                    mem = self.dbg.read_memory(addr, 0x58)
             except TypeError:
                 print_error("Invalid address specified.")
                 return None
@@ -91,21 +84,11 @@ class malloc_par:
              self.max_total_mem,
              self.sbrk_base) = struct.unpack("<5Q4I4Q", mem)
 
-        # work around for sbrk_base: if we cannot get sbrk_base
-        # from mp_, we can read the heap base from vmmap.
-        if self.sbrk_base == 0:
-            pid, task_id, thread_id = gdb.selected_thread().ptid
-            maps_data = open("/proc/%d/task/%d/maps" % (pid, task_id)
-                             ).readlines()
-            for line in maps_data:
-                if any(x.strip() == '[heap]' for x in line.split(' ')):
-                    self.sbrk_base = int(line.split(' ')[0].split('-')[0], 16)
-                    break
+        self.sbrk_base, end = self.dbg.get_heap_address()
 
         # we can't read heap address from mp_ or from maps file, exit libheap
-        if self.sbrk_base == 0:
-            print_error("Could not find sbrk_base, this setup is \
-                        unsupported.  Exiting.")
+        if (self.sbrk_base == 0) or (self.sbrk_base is None):
+            print_error("Could not find sbrk_base, this setup is unsupported.")
             exit()
 
     def __str__(self):

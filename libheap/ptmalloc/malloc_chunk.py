@@ -1,20 +1,18 @@
+import sys
 import struct
 
 from libheap import ptmalloc
 
-from libheap.printutils import color_title
-from libheap.printutils import color_value
-from libheap.printutils import print_error
-
-from libheap.debugger.pygdbpython import get_inferior
-from libheap.debugger.pygdbpython import get_size_sz
+from libheap.frontend.printutils import color_title
+from libheap.frontend.printutils import color_value
+from libheap.frontend.printutils import print_error
 
 
 class malloc_chunk:
     "python representation of a struct malloc_chunk"
 
-    def __init__(self, addr=None, mem=None, size=None, inferior=None,
-                 inuse=False, read_data=True):
+    def __init__(self, addr=None, mem=None, size=None, inuse=False,
+                 read_data=True, debugger=None):
         self.prev_size = 0
         self.size = 0
         self.data = None
@@ -32,20 +30,21 @@ class malloc_chunk:
         else:
             self.address = addr
 
-        if inferior is None and mem is None:
-            inferior = get_inferior()
-            if inferior == -1:
-                return None
+        if debugger is not None:
+            self.dbg = debugger
+        else:
+            print_error("Please specify a debugger")
+            sys.exit()
 
-        self.SIZE_SZ = get_size_sz()
+        self.SIZE_SZ = self.dbg.get_size_sz()
 
         if mem is None:
             # a string of raw memory was not provided
             try:
                 if self.SIZE_SZ == 4:
-                    mem = inferior.read_memory(addr, 0x8)
+                    mem = self.dbg.read_memory(addr, 0x8)
                 elif self.SIZE_SZ == 8:
-                    mem = inferior.read_memory(addr, 0x10)
+                    mem = self.dbg.read_memory(addr, 0x10)
             except TypeError:
                 print_error("Invalid address specified.")
                 return None
@@ -71,7 +70,8 @@ class malloc_chunk:
         elif self.SIZE_SZ == 8:
             (self.prev_size, self.size) = struct.unpack_from("<QQ", mem, 0x0)
 
-        ptm = ptmalloc.ptmalloc.ptmalloc()
+        ptm = ptmalloc.ptmalloc.ptmalloc(debugger=self.dbg)
+
         if size is None:
             real_size = (self.size & ~ptm.SIZE_BITS)
         else:
@@ -83,7 +83,7 @@ class malloc_chunk:
                 if self.address is not None:
                     # a string of raw memory was not provided
                     try:
-                        mem = inferior.read_memory(addr, real_size
+                        mem = self.dbg.read_memory(addr, real_size
                                                    + self.SIZE_SZ)
                     except TypeError:
                         print_error("Invalid address specified.")
@@ -104,11 +104,10 @@ class malloc_chunk:
         if not inuse:
             if self.address is not None:
                 # a string of raw memory was not provided
-                if inferior is not None:
-                    if self.SIZE_SZ == 4:
-                        mem = inferior.read_memory(addr, 0x18)
-                    elif self.SIZE_SZ == 8:
-                        mem = inferior.read_memory(addr, 0x30)
+                if self.SIZE_SZ == 4:
+                    mem = self.dbg.read_memory(addr, 0x18)
+                elif self.SIZE_SZ == 8:
+                    mem = self.dbg.read_memory(addr, 0x30)
 
             if self.SIZE_SZ == 4:
                 (self.fd, self.bk, self.fd_nextsize,
@@ -122,11 +121,6 @@ class malloc_chunk:
             inuse = True
         else:
             inuse = False
-
-        if inferior is None:
-            inferior = get_inferior()
-            if inferior == -1:
-                return None
 
         if inuse:
             if self.SIZE_SZ == 4:
@@ -147,7 +141,10 @@ class malloc_chunk:
                                   self.fd, self.bk, self.fd_nextsize,
                                   self.bk_nextsize)
 
-        inferior.write_memory(self.address, mem)
+        if self.dbg is not None:
+            self.dbg.write_memory(self.address, mem)
+        elif inferior is not None:
+            inferior.write_memory(self.address, mem)
 
     def __str__(self):
         if self.prev_size == 0 and self.size == 0:
@@ -165,8 +162,8 @@ class malloc_chunk:
                     ret += color_value("{}".format(self.data))
                     ret += "\n{:11} = ".format("raw")
                     ret += color_value("{}".format(struct.pack(
-                                                  "<%dI" % len(self.data),
-                                                  *self.data)))
+                                                   "<%dI" % len(self.data),
+                                                   *self.data)))
                 elif self.SIZE_SZ == 8:
                     ret += "\n{:11} = ".format("data")
                     ret += color_value("{}".format(self.data))

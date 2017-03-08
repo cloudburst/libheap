@@ -1,36 +1,41 @@
 from __future__ import print_function
 
+import sys
+
 try:
     import gdb
 except ImportError:
     print("Not running inside of GDB, exiting...")
-    import sys
     sys.exit()
-
-from libheap.ptmalloc.malloc_chunk import malloc_chunk
-from libheap.ptmalloc.malloc_state import malloc_state
-
-from libheap.printutils import color_value
-from libheap.printutils import print_error
-from libheap.printutils import print_value
 
 from libheap.ptmalloc.ptmalloc import ptmalloc
 
-from libheap.debugger.pygdbpython import read_variable
+from libheap.frontend.printutils import color_value
+from libheap.frontend.printutils import print_error
+from libheap.frontend.printutils import print_value
+
+from libheap.ptmalloc.malloc_chunk import malloc_chunk
+from libheap.ptmalloc.malloc_state import malloc_state
 
 
 class print_bin_layout(gdb.Command):
     "dump the layout of a free bin"
 
-    def __init__(self):
+    def __init__(self, debugger=None):
         super(print_bin_layout, self).__init__("print_bin_layout",
                                                gdb.COMMAND_USER,
                                                gdb.COMPLETE_NONE)
 
+        if debugger is not None:
+            self.dbg = debugger
+        else:
+            print_error("Please specify a debugger")
+            sys.exit()
+
     def invoke(self, arg, from_tty):
         "Specify an optional arena addr: print_bin_layout main_arena=0x12345"
 
-        ptm = ptmalloc()
+        ptm = ptmalloc(debugger=self.dbg)
 
         if ptm.SIZE_SZ == 0:
             ptm.set_globals()
@@ -41,7 +46,7 @@ class print_bin_layout(gdb.Command):
 
         try:
             if arg.find("main_arena") == -1:
-                main_arena = read_variable("main_arena")
+                main_arena = self.dbg.read_variable("main_arena")
                 main_arena_address = main_arena.address
             else:
                 # XXX: fixme
@@ -64,7 +69,7 @@ class print_bin_layout(gdb.Command):
             print_error("Invalid main_arena address (0)")
             return
 
-        ar_ptr = malloc_state(main_arena_address)
+        ar_ptr = malloc_state(main_arena_address, debugger=self.dbg)
         ptm.mutex_lock(ar_ptr)
 
         # print_title("Bin Layout")
@@ -74,7 +79,8 @@ class print_bin_layout(gdb.Command):
             return
 
         b = ptm.bin_at(ar_ptr, int(arg))
-        p = malloc_chunk(ptm.first(malloc_chunk(b, inuse=False)), inuse=False)
+        first = ptm.first(malloc_chunk(b, inuse=False, debugger=self.dbg))
+        p = malloc_chunk(first, inuse=False, debugger=self.dbg)
         print_once = True
         print_str = ""
         count = 0
@@ -89,7 +95,7 @@ class print_bin_layout(gdb.Command):
             print_str += "  <-->  "
             print_str += color_value("{:#x}".format(int(p.address)))
             count += 1
-            p = malloc_chunk(ptm.first(p), inuse=False)
+            p = malloc_chunk(ptm.first(p), inuse=False, debugger=self.dbg)
 
         if len(print_str) != 0:
             print_str += "  <--"

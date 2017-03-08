@@ -1,14 +1,13 @@
+import sys
 import struct
 
-from libheap.debugger.pygdbpython import get_inferior
-from libheap.debugger.pygdbpython import get_size_sz
-from libheap.debugger.pygdbpython import gdb_is_running
+from libheap.frontend.printutils import print_error
 
 from libheap.ptmalloc.malloc_chunk import malloc_chunk
 
 
 class ptmalloc:
-    def __init__(self, SIZE_SZ=0):
+    def __init__(self, SIZE_SZ=0, debugger=None):
         self.SIZE_SZ = SIZE_SZ
 
         self.NBINS = 128
@@ -27,9 +26,20 @@ class ptmalloc:
         self.SIZE_BITS = (self.PREV_INUSE | self.IS_MMAPPED
                           | self.NON_MAIN_ARENA)
 
+        self.dbg = debugger
+
+        if debugger is not None:
+            self.inferior = debugger.get_inferior()
+        else:
+            self.inferior = None
+
     def set_globals(self, SIZE_SZ=None):
         if SIZE_SZ is None:
-            self.SIZE_SZ = get_size_sz()
+            if self.dbg is None:
+                print_error("Please specify a debugger.")
+                sys.exit()
+
+            self.SIZE_SZ = self.dbg.get_size_sz()
         else:
             self.SIZE_SZ = SIZE_SZ
 
@@ -84,33 +94,13 @@ class ptmalloc:
         "Get size, ignoring use bits"
         return (p.size & ~self.SIZE_BITS)
 
-    @gdb_is_running
-    def mutex_lock(self, ar_ptr, inferior=None):
-        from gdb import MemoryError
-
-        if inferior is None:
-            inferior = ar_ptr.inferior
-
+    def mutex_lock(self, ar_ptr):
         ar_ptr.mutex = 1
-        try:
-            inferior.write_memory(ar_ptr.address,
-                                  struct.pack("<I", ar_ptr.mutex))
-        except MemoryError:
-            pass
+        self.dbg.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
 
-    @gdb_is_running
-    def mutex_unlock(self, ar_ptr, inferior=None):
-        from gdb import MemoryError
-
-        if inferior is None:
-            inferior = ar_ptr.inferior
-
+    def mutex_unlock(self, ar_ptr):
         ar_ptr.mutex = 0
-        try:
-            inferior.write_memory(ar_ptr.address,
-                                  struct.pack("<I", ar_ptr.mutex))
-        except MemoryError:
-            pass
+        self.dbg.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
 
     def prev_inuse(self, p):
         "extract inuse bit of previous chunk"
@@ -134,49 +124,54 @@ class ptmalloc:
 
     def chunk_at_offset(self, p, s):
         "Treat space at ptr + offset as a chunk"
-        return malloc_chunk(p.address + s, inuse=False)
+        return malloc_chunk(p.address + s, inuse=False, debugger=self.dbg)
 
     def inuse(self, p):
         "extract p's inuse bit"
         return (malloc_chunk(p.address + (p.size & ~self.SIZE_BITS),
-                inuse=False).size & self.PREV_INUSE)
+                inuse=False, debugger=self.dbg).size & self.PREV_INUSE)
 
     def set_inuse(self, p):
         "set chunk as being inuse without otherwise disturbing"
         chunk = malloc_chunk((p.address + (p.size & ~self.SIZE_BITS)),
-                             inuse=False)
+                             inuse=False, debugger=self.dbg)
         chunk.size |= self.PREV_INUSE
         chunk.write()
 
     def clear_inuse(self, p):
         "clear chunk as being inuse without otherwise disturbing"
         chunk = malloc_chunk((p.address + (p.size & ~self.SIZE_BITS)),
-                             inuse=False)
+                             inuse=False, debugger=self.dbg)
         chunk.size &= ~self.PREV_INUSE
         chunk.write()
 
     def inuse_bit_at_offset(self, p, s):
         "check inuse bits in known places"
-        return (malloc_chunk((p.address + s), inuse=False).size
-                & self.PREV_INUSE)
+        return (malloc_chunk((p.address + s), inuse=False,
+                debugger=self.dbg).size & self.PREV_INUSE)
 
     def set_inuse_bit_at_offset(self, p, s):
         "set inuse bits in known places"
-        chunk = malloc_chunk((p.address + s), inuse=False)
+        chunk = malloc_chunk((p.address + s), inuse=False, debugger=self.dbg)
         chunk.size |= self.PREV_INUSE
         chunk.write()
 
     def clear_inuse_bit_at_offset(self, p, s):
         "clear inuse bits in known places"
-        chunk = malloc_chunk((p.address + s), inuse=False)
+        chunk = malloc_chunk((p.address + s), inuse=False, debugger=self.dbg)
         chunk.size &= ~self.PREV_INUSE
         chunk.write()
 
-    @gdb_is_running
+    # XXX: remove gdb
     def bin_at(self, m, i):
         "addressing -- note that bin_at(0) does not exist"
         from gdb import parse_and_eval
         from gdb import lookup_type
+
+        if self.dbg is None:
+            print_error("Please specify a debugger.")
+            import sys
+            sys.exit()
 
         if self.SIZE_SZ == 4:
             offsetof_fd = 0x8
@@ -186,7 +181,7 @@ class ptmalloc:
             cast_type = 'unsigned long'
 
         cmd_str = "&((struct malloc_state *) {:#x}).bins[{}]".format(
-                                            int(m.address), int((i - 1) * 2))
+                  int(m.address), int((i - 1) * 2))
         return int(parse_and_eval(cmd_str).cast(lookup_type(cast_type))
                    - offsetof_fd)
 
@@ -262,21 +257,13 @@ class ptmalloc:
     def have_fastchunks(self, M):
         return ((M.flags & self.FASTCHUNKS_BIT) == 0)
 
-    @gdb_is_running
-    def clear_fastchunks(self, M, inferior=None):
-        if inferior is None:
-            inferior = get_inferior()
-
+    def clear_fastchunks(self, M):
         M.flags |= self.FASTCHUNKS_BIT
-        inferior.write_memory(M.address, struct.pack("<I", M.flags))
+        self.dbg.write_memory(M.address, struct.pack("<I", M.flags))
 
-    @gdb_is_running
-    def set_fastchunks(self, M, inferior=None):
-        if inferior is None:
-            inferior = get_inferior()
-
+    def set_fastchunks(self, M):
         M.flags &= ~self.FASTCHUNKS_BIT
-        inferior.write_memory(M.address, struct.pack("<I", M.flags))
+        self.dbg.write_memory(M.address, struct.pack("<I", M.flags))
 
     def contiguous(self, M):
         return ((M.flags & self.NONCONTIGUOUS_BIT) == 0)
@@ -284,23 +271,15 @@ class ptmalloc:
     def noncontiguous(self, M):
         return ((M.flags & self.NONCONTIGUOUS_BIT) != 0)
 
-    @gdb_is_running
-    def set_noncontiguous(self, M, inferior=None):
-        if inferior is None:
-            inferior = get_inferior()
-
+    def set_noncontiguous(self, M):
         M.flags |= self.NONCONTIGUOUS_BIT
-        inferior.write_memory(M.address, struct.pack("<I", M.flags))
+        self.dbg.write_memory(M.address, struct.pack("<I", M.flags))
 
-    @gdb_is_running
-    def set_contiguous(self, M, inferior=None):
-        if inferior is None:
-            inferior = get_inferior()
-
+    def set_contiguous(self, M):
         M.flags &= ~self.NONCONTIGUOUS_BIT
-        inferior.write_memory(M.address, struct.pack("<I", M.flags))
+        self.dbg.write_memory(M.address, struct.pack("<I", M.flags))
 
-    @gdb_is_running
+    # XXX: remove gdb
     def get_max_fast(self):
         from gdb import parse_and_eval
         return parse_and_eval("global_max_fast")

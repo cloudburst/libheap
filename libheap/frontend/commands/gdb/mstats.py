@@ -1,47 +1,50 @@
 from __future__ import print_function
 
+import sys
+
 try:
     import gdb
 except ImportError:
     print("Not running inside of GDB, exiting...")
-    import sys
     sys.exit()
+
+from libheap.frontend.printutils import print_error
+from libheap.frontend.printutils import print_value
+from libheap.frontend.printutils import print_header
+
+from libheap.ptmalloc.ptmalloc import ptmalloc
 
 from libheap.ptmalloc.malloc_chunk import malloc_chunk
 from libheap.ptmalloc.malloc_state import malloc_state
-
-from libheap.debugger.pygdbpython import get_inferior
-from libheap.debugger.pygdbpython import read_variable
-
-from libheap.printutils import print_error
-from libheap.printutils import print_value
-from libheap.printutils import print_header
-
-from libheap.ptmalloc.ptmalloc import ptmalloc
 
 
 class mstats(gdb.Command):
     "print general malloc stats, adapted from malloc.c mSTATs()"
 
-    def __init__(self):
+    def __init__(self, debugger=None):
         super(mstats, self).__init__("mstats", gdb.COMMAND_USER,
                                      gdb.COMPLETE_NONE)
+
+        if debugger is not None:
+            self.dbg = debugger
+        else:
+            print_error("Please specify a debugger")
+            sys.exit()
 
     def invoke(self, arg, from_tty):
         "Specify an optional arena addr: print_mstats main_arena=0x12345"
 
-        ptm = ptmalloc()
-        inferior = get_inferior()
+        ptm = ptmalloc(debugger=self.dbg)
 
         if ptm.SIZE_SZ == 0:
             ptm.set_globals()
 
         try:
             # XXX: add mp_ address guessing via offset without symbols
-            mp = read_variable("mp_")
+            mp = self.dbg.read_variable("mp_")
 
             if arg.find("main_arena") == -1:
-                main_arena = read_variable("main_arena")
+                main_arena = self.dbg.read_variable("main_arena")
                 main_arena_address = main_arena.address
             else:
                 arg = arg.split()
@@ -69,13 +72,13 @@ class mstats(gdb.Command):
         print("Malloc Stats", end="\n\n")
 
         arena = 0
-        ar_ptr = malloc_state(main_arena_address, inferior=inferior)
+        ar_ptr = malloc_state(main_arena_address, debugger=self.dbg)
         while(1):
             ptm.mutex_lock(ar_ptr)
 
             # account for top
-            avail = ptm.chunksize(malloc_chunk(ptm.top(ar_ptr),
-                                  inuse=True, read_data=False))
+            avail = ptm.chunksize(malloc_chunk(ptm.top(ar_ptr), inuse=True,
+                                  read_data=False, debugger=self.dbg))
             nblocks = 1
 
             nfastblocks = 0
@@ -85,7 +88,7 @@ class mstats(gdb.Command):
             for i in range(ptm.NFASTBINS):
                 p = ptm.fastbin(ar_ptr, i)
                 while p != 0:
-                    p = malloc_chunk(p, inuse=False)
+                    p = malloc_chunk(p, inuse=False, debugger=self.dbg)
                     nfastblocks += 1
                     fastavail += ptm.chunksize(p)
                     p = p.fd
@@ -95,13 +98,15 @@ class mstats(gdb.Command):
             # traverse regular bins
             for i in range(1, ptm.NBINS):
                 b = ptm.bin_at(ar_ptr, i)
-                p = malloc_chunk(ptm.first(malloc_chunk(b, inuse=False)),
-                                 inuse=False)
+                first = malloc_chunk(b, inuse=False, debugger=self.dbg)
+                first = ptm.first(first)
+                p = malloc_chunk(first, inuse=False, debugger=self.dbg)
 
                 while p.address != int(b):
                     nblocks += 1
                     avail += ptm.chunksize(p)
-                    p = malloc_chunk(ptm.first(p), inuse=False)
+                    p = malloc_chunk(ptm.first(p), inuse=False,
+                                     debugger=self.dbg)
 
             print_header("Arena {}:".format(arena), end="\n")
             print("{:16} = ".format("system bytes"), end='')
@@ -116,7 +121,7 @@ class mstats(gdb.Command):
             if ar_ptr.next == main_arena_address:
                 break
             else:
-                ar_ptr = malloc_state(ar_ptr.next, inferior=inferior)
+                ar_ptr = malloc_state(ar_ptr.next, debugger=self.dbg)
                 arena += 1
 
         print_header("\nTotal (including mmap):", end="\n")
