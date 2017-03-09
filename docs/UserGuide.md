@@ -4,7 +4,7 @@
 
 Loading [`libheap`] is the same as any other Python library:
 
-    $ gdb
+    sh$ gdb
     (gdb) python from libheap import *
 
 This can also be added to your gdbinit to save a step:
@@ -73,60 +73,6 @@ A number of different functions exist to print the overall state of the heap as 
     compact arena layout
     |A||11||A||11||A||T|
 
-### Chunks
-
-There are a number of ways to examine a malloc chunk using [`libheap`].  The library has a pretty printer for struct malloc_chunk so we can print any arbitrary address as if it was a valid chunk:
-
-    (gdb) p *(mchunkptr) 0x608790
-    struct malloc_chunk {
-    prev_size   = 0x0
-    size        = 0x21a81
-    fd          = 0x0
-    bk          = 0x0
-    fd_nextsize = 0x0
-    bk_nextsize = 0x0
-
-To get more granular access to a chunk, [`libheap`] exposes a python class representation of a malloc chunk:
-
-    (gdb) python print malloc_chunk(0x608790)
-    struct malloc_chunk {
-    prev_size   = 0x0
-    size        = 0x21a81
-    fd          = 0x0
-    bk          = 0x0
-    fd_nextsize = 0x0
-    bk_nextsize = 0x0
-
-By default an address is treated as a free chunk and reads all of the fields of struct malloc_chunk, however this can be changed by passing in the optional boolean flag named inuse.  If we only want to read the header of an allocated chunk we can also pass in an optional boolean flag named read_data.  By default the class will attempt to read whatever size is specified within the chunk.  Obviously this can be problematic within exploits where you are overwriting the size field with a bogus value so there is an optional size flag to the class that allows you to specify the real size of a chunk.  Putting this all together, let's see some examples of accessing and changing the individual fields of a chunk:
-
-    (gdb) python chunk = malloc_chunk(0x608790, inuse=True, read_data=False)
-    (gdb) python print chunk
-    struct malloc_chunk {
-    prev_size   = 0x0
-    size        = 0x21a81
-
-    (gdb) python chunk.size = 1
-    (gdb) python chunk.write()
-    (gdb) python print chunk
-    struct malloc_chunk {
-    prev_size   = 0x0
-    size        = 0x1
-
-    (gdb) python print malloc_chunk(0x608790, inuse=True, size=8)
-    struct malloc_chunk {
-    prev_size   = 0x0
-    size        = 0x1
-    data        = (0,)
-    raw         = "\x00\x00\x00\x00"
-
-Finally, if we are working on an exploit and want to prototype malloc chunks and see how they would appear within this heap implementation we can pass the class a string of raw memory and see how it would be interpreted:
-
-    (gdb) python print malloc_chunk(mem='\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00', inuse=True)
-
-    struct malloc_chunk {
-    prev_size   = 0x1
-    size        = 0x2
-
 ## Statistics
 
 Memory allocation statistics similar to the ones printed by `malloc_stats(3)`
@@ -167,7 +113,7 @@ can be obtained:
     max mmap regions = 1
     max mmap bytes   = 135168
 
-## Glibc Structures
+## ptmalloc Structures
 
 There are also included pretty printers for struct malloc_par and struct malloc_state.  These can be viewed by attempting to print out the global variables:
 
@@ -210,6 +156,60 @@ Python classes also exist for these two important structures so you can examine 
     max_mmapped_mem  = 0x4f000
     max_total_mem    = 0x0
     sbrk_base        = 0x809c000
+
+## Malloc Chunks
+
+There are a number of ways to examine a malloc chunk using [`libheap`].  The library has a pretty printer for struct malloc_chunk so we can print any arbitrary address as if it was a valid chunk:
+
+    (gdb) p *(mchunkptr) 0x608790
+    struct malloc_chunk {
+    prev_size   = 0x0
+    size        = 0x21a81
+    fd          = 0x0
+    bk          = 0x0
+    fd_nextsize = 0x0
+    bk_nextsize = 0x0
+
+To get more granular access to a chunk, [`libheap`] exposes a python class representation of a malloc chunk:
+
+    (gdb) python print(malloc_chunk(0x608790))
+    struct malloc_chunk {
+    prev_size   = 0x0
+    size        = 0x21a81
+    fd          = 0x0
+    bk          = 0x0
+    fd_nextsize = 0x0
+    bk_nextsize = 0x0
+
+By default an address is treated as a free chunk and reads all of the fields of struct malloc_chunk, however this can be changed by passing in the optional boolean flag named inuse.  If we only want to read the header of an allocated chunk we can also pass in an optional boolean flag named read_data.  By default the class will attempt to read whatever size is specified within the chunk.  Obviously this can be problematic within exploits where you are overwriting the size field with a bogus value so there is an optional size flag to the class that allows you to specify the real size of a chunk.  Putting this all together, let's see some examples of accessing and changing the individual fields of a chunk:
+
+    (gdb) python chunk = malloc_chunk(0x608790, inuse=True, read_data=False)
+    (gdb) python print(chunk)
+    struct malloc_chunk {
+    prev_size   = 0x0
+    size        = 0x21a81
+
+    (gdb) python chunk.size = 1
+    (gdb) python chunk.write()
+    (gdb) python print(chunk)
+    struct malloc_chunk {
+    prev_size   = 0x0
+    size        = 0x1
+
+    (gdb) python print(malloc_chunk(0x608790, inuse=True, size=8))
+    struct malloc_chunk {
+    prev_size   = 0x0
+    size        = 0x1
+    data        = (0,)
+    raw         = "\x00\x00\x00\x00"
+
+Finally, if we are working on an exploit and want to prototype malloc chunks and see how they would appear within this heap implementation we can pass the class a string of raw memory and see how it would be interpreted:
+
+    (gdb) python print(malloc_chunk(mem='\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00', inuse=True))
+
+    struct malloc_chunk {
+    prev_size   = 0x1
+    size        = 0x2
 
 ## Convenience Functions
 
