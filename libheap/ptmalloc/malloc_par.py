@@ -114,7 +114,7 @@ class malloc_par:
         elif self.sz == 8:
             fmt = "<Q"
 
-        offset = (self.sz * 5) + 16
+        offset = offset + 4
         self.mmapped_mem = self.unpack_variable(fmt, offset)
 
         offset = offset + self.sz
