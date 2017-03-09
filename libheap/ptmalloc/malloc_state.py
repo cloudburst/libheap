@@ -40,7 +40,10 @@ class malloc_state:
         self.sz = self.dbg.get_size_sz()
 
         if version is None:
-            self.version = 2.19  # XXX: hard code version for now
+            print_error("Please specify a malloc_state version.")
+            sys.exit()
+        else:
+            self.version = version
 
         if mem is None:
             # a string of raw memory was not provided

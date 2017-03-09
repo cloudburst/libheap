@@ -22,7 +22,7 @@ from libheap.ptmalloc.malloc_state import malloc_state
 class smallbins(gdb.Command):
     """Walk and print the small bins."""
 
-    def __init__(self, debugger=None):
+    def __init__(self, debugger=None, version=None):
         super(smallbins, self).__init__("smallbins", gdb.COMMAND_USER,
                                         gdb.COMPLETE_NONE)
 
@@ -31,6 +31,8 @@ class smallbins(gdb.Command):
         else:
             print_error("Please specify a debugger")
             sys.exit()
+
+        self.version = version
 
     def invoke(self, arg, from_tty):
         ptm = ptmalloc(debugger=self.dbg)
@@ -46,7 +48,8 @@ class smallbins(gdb.Command):
         # XXX: from old heap command, replace
         main_arena = self.dbg.read_variable("main_arena")
         arena_address = main_arena.address
-        ar_ptr = malloc_state(arena_address, debugger=self.dbg)
+        ar_ptr = malloc_state(arena_address, debugger=self.dbg,
+                              version=self.version)
 
         # mchunkptr bins in struct malloc_state
         if ptm.SIZE_SZ == 4:

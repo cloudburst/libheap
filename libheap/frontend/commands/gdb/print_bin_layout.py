@@ -21,7 +21,7 @@ from libheap.ptmalloc.malloc_state import malloc_state
 class print_bin_layout(gdb.Command):
     "dump the layout of a free bin"
 
-    def __init__(self, debugger=None):
+    def __init__(self, debugger=None, version=None):
         super(print_bin_layout, self).__init__("print_bin_layout",
                                                gdb.COMMAND_USER,
                                                gdb.COMPLETE_NONE)
@@ -31,6 +31,8 @@ class print_bin_layout(gdb.Command):
         else:
             print_error("Please specify a debugger")
             sys.exit()
+
+        self.version = version
 
     def invoke(self, arg, from_tty):
         "Specify an optional arena addr: print_bin_layout main_arena=0x12345"
@@ -69,7 +71,8 @@ class print_bin_layout(gdb.Command):
             print_error("Invalid main_arena address (0)")
             return
 
-        ar_ptr = malloc_state(main_arena_address, debugger=self.dbg)
+        ar_ptr = malloc_state(main_arena_address, debugger=self.dbg,
+                              version=self.version)
         ptm.mutex_lock(ar_ptr)
 
         # print_title("Bin Layout")

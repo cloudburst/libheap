@@ -21,7 +21,7 @@ from libheap.ptmalloc.malloc_state import malloc_state
 class mstats(gdb.Command):
     "print general malloc stats, adapted from malloc.c mSTATs()"
 
-    def __init__(self, debugger=None):
+    def __init__(self, debugger=None, version=None):
         super(mstats, self).__init__("mstats", gdb.COMMAND_USER,
                                      gdb.COMPLETE_NONE)
 
@@ -30,6 +30,8 @@ class mstats(gdb.Command):
         else:
             print_error("Please specify a debugger")
             sys.exit()
+
+        self.version = version
 
     def invoke(self, arg, from_tty):
         "Specify an optional arena addr: print_mstats main_arena=0x12345"
@@ -72,7 +74,8 @@ class mstats(gdb.Command):
         print("Malloc Stats", end="\n\n")
 
         arena = 0
-        ar_ptr = malloc_state(main_arena_address, debugger=self.dbg)
+        ar_ptr = malloc_state(main_arena_address, debugger=self.dbg,
+                              version=self.version)
         while(1):
             ptm.mutex_lock(ar_ptr)
 
@@ -121,7 +124,8 @@ class mstats(gdb.Command):
             if ar_ptr.next == main_arena_address:
                 break
             else:
-                ar_ptr = malloc_state(ar_ptr.next, debugger=self.dbg)
+                ar_ptr = malloc_state(ar_ptr.next, debugger=self.dbg,
+                                      version=self.version)
                 arena += 1
 
         print_header("\nTotal (including mmap):", end="\n")

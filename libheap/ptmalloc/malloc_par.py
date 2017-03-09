@@ -43,7 +43,10 @@ class malloc_par:
         self.sz = self.dbg.get_size_sz()
 
         if version is None:
-            self.version = 2.19  # XXX: hard code version for now
+            print_error("Please specify a malloc_par version.")
+            sys.exit()
+        else:
+            self.version = version
 
         if mem is None:
             # a string of raw memory was not provided

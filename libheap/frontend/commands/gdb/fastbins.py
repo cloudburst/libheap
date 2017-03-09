@@ -22,7 +22,7 @@ from libheap.ptmalloc.malloc_chunk import malloc_chunk
 class fastbins(gdb.Command):
     """Walk and print the fast bins."""
 
-    def __init__(self, debugger=None):
+    def __init__(self, debugger=None, version=None):
         super(fastbins, self).__init__("fastbins", gdb.COMMAND_USER,
                                        gdb.COMPLETE_NONE)
 
@@ -31,6 +31,8 @@ class fastbins(gdb.Command):
         else:
             print_error("Please specify a debugger")
             sys.exit()
+
+        self.version = version
 
     def invoke(self, arg, from_tty):
         ptm = ptmalloc(debugger=self.dbg)
@@ -46,8 +48,10 @@ class fastbins(gdb.Command):
         # XXX: from old heap command, replace
         main_arena = self.dbg.read_variable("main_arena")
         arena_address = main_arena.address
-        ar_ptr = malloc_state(arena_address, debugger=self.dbg)
+        ar_ptr = malloc_state(arena_address, debugger=self.dbg,
+                              version=self.version)
         # 8 bytes into struct malloc_state on both 32/64bit
+        # XXX: fixme for glibc <= 2.19 with THREAD_STATS
         fastbinsY = int(ar_ptr.address) + 8
         fb_base = fastbinsY
 

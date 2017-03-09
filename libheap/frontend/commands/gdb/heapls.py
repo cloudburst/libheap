@@ -22,7 +22,7 @@ from libheap.ptmalloc.malloc_chunk import malloc_chunk
 class heapls(gdb.Command):
     """Print a flat listing of an arena"""
 
-    def __init__(self, debugger=None):
+    def __init__(self, debugger=None, version=None):
         super(heapls, self).__init__("heapls", gdb.COMMAND_USER,
                                      gdb.COMPLETE_NONE)
 
@@ -31,6 +31,8 @@ class heapls(gdb.Command):
         else:
             print_error("Please specify a debugger")
             sys.exit()
+
+        self.version = version
 
     def invoke(self, arg, from_tty):
         """Inspired by jp's phrack print and arena.c"""
@@ -43,12 +45,13 @@ class heapls(gdb.Command):
         # XXX: from old heap command, replace
         main_arena = self.dbg.read_variable("main_arena")
         arena_address = main_arena.address
-        ar_ptr = malloc_state(arena_address, debugger=self.dbg)
+        ar_ptr = malloc_state(arena_address, debugger=self.dbg,
+                              version=self.version)
 
         # XXX: add mp_ address guessing via offset without symbols
         mp_ = self.dbg.read_variable("mp_")
         mp_address = mp_.address
-        mp = malloc_par(mp_address, debugger=self.dbg)
+        mp = malloc_par(mp_address, debugger=self.dbg, version=self.version)
         start, end = self.dbg.get_heap_address(mp)
         sbrk_base = start
 
