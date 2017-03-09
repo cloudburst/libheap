@@ -2,9 +2,12 @@
 
 [`libheap`] is a python library to examine ptmalloc (the glibc userland heap implementation).
 
-It is currently tested and supported on glibc 2.19 only (Ubuntu 14.04 LTS).
+It is currently tested and known working on:
 
-If you try to use other glibc versions, the ptmalloc structures will be incorrectly sized and it won't work.  I'm refactoring the code to support multiple glibc versions but for now the structs have to be manually patched if you want to use a newer version.
+| glibc 2.19 | glibc 2.23 |
+| --- | --- |
+| Ubuntu 14.04 LTS i386 | Ubuntu 16.04 LTS i386 |
+| Ubuntu 14.04 LTS amd64 | Ubuntu 16.04 LTS amd64 |
 
 # Installation
 
