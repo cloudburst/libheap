@@ -38,8 +38,11 @@ class malloc_par_printer:
         mp += color_value("{:#x}".format(int(self.val['mmapped_mem'])))
         mp += "\n{:16} = ".format("max_mmapped_mem")
         mp += color_value("{:#x}".format(int(self.val['max_mmapped_mem'])))
+
+        # max_total_mem removed in 2.24
         mp += "\n{:16} = ".format("max_total_mem")
         mp += color_value("{:#x}".format(int(self.val['max_total_mem'])))
+
         mp += "\n{:16} = ".format("sbrk_base")
         mp += color_value("{:#x}".format(int(self.val['sbrk_base'])))
         return mp
@@ -69,6 +72,13 @@ class malloc_state_printer:
         ms += color_value("{}".format("{...}"))
         ms += "\n{:14} = ".format("next")
         ms += color_value("{:#x}".format(int(self.val['next'])))
+        ms += "\n{:14} = ".format("next_free")
+        ms += color_value("{:#x}".format(int(self.val['next_free'])))
+
+        # attached_threads added in 2.23
+        # ms += "\n{:14} = ".format("attached_threads")
+        # ms += color_value("{:#x}".format(int(self.val['attached_threads'])))
+
         ms += "\n{:14} = ".format("system_mem")
         ms += color_value("{:#x}".format(int(self.val['system_mem'])))
         ms += "\n{:14} = ".format("max_system_mem")
