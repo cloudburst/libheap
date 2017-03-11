@@ -96,11 +96,21 @@ class ptmalloc:
 
     def mutex_lock(self, ar_ptr):
         ar_ptr.mutex = 1
-        self.dbg.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+        try:
+            self.dbg.write_memory(ar_ptr.address,
+                                  struct.pack("<I", ar_ptr.mutex))
+        except:
+            # write_memory does not work on core dumps, but we also don't need
+            # to lock the mutex there
+            pass
 
     def mutex_unlock(self, ar_ptr):
         ar_ptr.mutex = 0
-        self.dbg.write_memory(ar_ptr.address, struct.pack("<I", ar_ptr.mutex))
+        try:
+            self.dbg.write_memory(ar_ptr.address,
+                                  struct.pack("<I", ar_ptr.mutex))
+        except:
+            pass
 
     def prev_inuse(self, p):
         "extract inuse bit of previous chunk"
