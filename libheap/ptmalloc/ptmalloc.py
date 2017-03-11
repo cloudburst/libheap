@@ -190,8 +190,12 @@ class ptmalloc:
             offsetof_fd = 0x10
             cast_type = 'unsigned long'
 
-        cmd_str = "&((struct malloc_state *) {:#x}).bins[{}]".format(
-                  int(m.address), int((i - 1) * 2))
+        # This works on both Python 2 and 3 while casting m.address to int (in
+        # order to format it with the '{:x}'.format) only works on Python 3
+        addr = '%#x' % m.address
+
+        cmd_str = "&((struct malloc_state *) {}).bins[{}]".format(
+                  addr, int((i - 1) * 2))
         return int(parse_and_eval(cmd_str).cast(lookup_type(cast_type))
                    - offsetof_fd)
 
