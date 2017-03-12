@@ -15,12 +15,7 @@ def format_address(value):
         ret = int(value)
     except gdb.error:
         # python2 error: Cannot convert value to int
-        try:
-            ret = int(str(value), 16)
-        except ValueError:
-            # work around bug where val is 'sbrk_base ""'
-            value = str(value).split()[0]
-            ret = int(str(value), 16)
+        ret = int(str(value).split(' ')[0], 16)
 
     return ret
 
