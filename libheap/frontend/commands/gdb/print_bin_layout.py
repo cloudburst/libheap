@@ -23,7 +23,7 @@ class print_bin_layout(gdb.Command):
 
     def __init__(self, debugger=None, version=None):
         super(print_bin_layout, self).__init__("print_bin_layout",
-                                               gdb.COMMAND_USER,
+                                               gdb.COMMAND_OBSCURE,
                                                gdb.COMPLETE_NONE)
 
         if debugger is not None:

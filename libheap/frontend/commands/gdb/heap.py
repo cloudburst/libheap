@@ -20,7 +20,8 @@ class heap(gdb.Command):
     """libheap command help listing"""
 
     def __init__(self, debugger=None, version=None):
-        super(heap, self).__init__("heap", gdb.COMMAND_USER, gdb.COMPLETE_NONE)
+        super(heap, self).__init__("heap", gdb.COMMAND_OBSCURE,
+                                   gdb.COMPLETE_NONE)
 
         if debugger is not None:
             self.dbg = debugger

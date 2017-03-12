@@ -22,7 +22,7 @@ class mstats(gdb.Command):
     "print general malloc stats, adapted from malloc.c mSTATs()"
 
     def __init__(self, debugger=None, version=None):
-        super(mstats, self).__init__("mstats", gdb.COMMAND_USER,
+        super(mstats, self).__init__("mstats", gdb.COMMAND_OBSCURE,
                                      gdb.COMPLETE_NONE)
 
         if debugger is not None:

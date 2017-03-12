@@ -23,7 +23,7 @@ class fastbins(gdb.Command):
     """Walk and print the fast bins."""
 
     def __init__(self, debugger=None, version=None):
-        super(fastbins, self).__init__("fastbins", gdb.COMMAND_USER,
+        super(fastbins, self).__init__("fastbins", gdb.COMMAND_OBSCURE,
                                        gdb.COMPLETE_NONE)
 
         if debugger is not None:

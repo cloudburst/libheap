@@ -22,7 +22,7 @@ class heaplsc(gdb.Command):
     """Print compact arena layout (all chunks)"""
 
     def __init__(self, debugger=None, version=None):
-        super(heaplsc, self).__init__("heaplsc", gdb.COMMAND_USER,
+        super(heaplsc, self).__init__("heaplsc", gdb.COMMAND_OBSCURE,
                                       gdb.COMPLETE_NONE)
 
         if debugger is not None:
