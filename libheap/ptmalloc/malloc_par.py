@@ -51,7 +51,7 @@ class malloc_par:
         if mem is None:
             # a string of raw memory was not provided
 
-            if self.version >= 2.19 and self.version <= 2.23:
+            if self.version >= 2.15 and self.version <= 2.23:
                 if self.sz == 4:
                     # sizeof(malloc_par) = 20 + 16 + 16
                     struct_malloc_par_size = 0x34

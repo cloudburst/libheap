@@ -48,7 +48,7 @@ class malloc_state:
 
         if mem is None:
             # a string of raw memory was not provided
-            if self.version >= 2.19 and self.version < 2.23:
+            if self.version >= 2.15 and self.version < 2.23:
                 if self.sz == 4:
                     # sizeof(malloc_state) = 4+4+40+4+4+(254*4)+16+4+4+4+4
                     struct_malloc_state_size = 0x450
