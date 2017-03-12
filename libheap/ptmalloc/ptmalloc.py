@@ -23,8 +23,8 @@ class ptmalloc:
         self.PREV_INUSE = 1
         self.IS_MMAPPED = 2
         self.NON_MAIN_ARENA = 4
-        self.SIZE_BITS = (self.PREV_INUSE | self.IS_MMAPPED
-                          | self.NON_MAIN_ARENA)
+        self.SIZE_BITS = (self.PREV_INUSE | self.IS_MMAPPED |
+                          self.NON_MAIN_ARENA)
 
         self.dbg = debugger
 
@@ -46,8 +46,8 @@ class ptmalloc:
         self.MIN_CHUNK_SIZE = 4 * self.SIZE_SZ
         self.MALLOC_ALIGNMENT = 2 * self.SIZE_SZ
         self.MALLOC_ALIGN_MASK = self.MALLOC_ALIGNMENT - 1
-        self.MINSIZE = ((self.MIN_CHUNK_SIZE + self.MALLOC_ALIGN_MASK)
-                        & ~self.MALLOC_ALIGN_MASK)
+        self.MINSIZE = ((self.MIN_CHUNK_SIZE +
+                        self.MALLOC_ALIGN_MASK) & ~self.MALLOC_ALIGN_MASK)
 
         self.SMALLBIN_WIDTH = self.MALLOC_ALIGNMENT
         self.MIN_LARGE_SIZE = self.NSMALLBINS * self.SMALLBIN_WIDTH
@@ -70,8 +70,8 @@ class ptmalloc:
         if (req + self.SIZE_SZ + self.MALLOC_ALIGN_MASK < self.MINSIZE):
             return self.MINSIZE
         else:
-            return (int(req + self.SIZE_SZ + self.MALLOC_ALIGN_MASK)
-                    & ~self.MALLOC_ALIGN_MASK)
+            return (int(req + self.SIZE_SZ +
+                    self.MALLOC_ALIGN_MASK) & ~self.MALLOC_ALIGN_MASK)
 
     def fastbin(self, ar_ptr, idx):
         return ar_ptr.fastbinsY[idx]
@@ -180,7 +180,6 @@ class ptmalloc:
             sys.exit()
 
         index = (i-1) * 2
-        addr = self.dbg.format_address(m.address)
         return m.bins[index]
 
     def next_bin(self, b):

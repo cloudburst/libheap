@@ -83,8 +83,8 @@ class malloc_chunk:
                 if self.address is not None:
                     # a string of raw memory was not provided
                     try:
-                        mem = self.dbg.read_memory(addr, real_size
-                                                   + self.SIZE_SZ)
+                        mem = self.dbg.read_memory(addr, real_size +
+                                                   self.SIZE_SZ)
                     except TypeError:
                         print_error("Invalid address specified.")
                         return None

@@ -19,7 +19,7 @@ class malloc_state:
         self.binmap = 0
         self.next = 0
         self.next_free = 0
-        #self.attached_threads = 0
+        # self.attached_threads = 0
         self.system_mem = 0
         self.max_system_mem = 0
 

@@ -85,9 +85,9 @@ class heapls(gdb.Command):
                 print("BK ", end="")
                 print_value("{:#x} ".format(int(p.bk)))
 
-                if ((p.fd == ar_ptr.last_remainder)
-                   and (p.bk == ar_ptr.last_remainder)
-                   and (ar_ptr.last_remainder != 0)):
+                if ((p.fd == ar_ptr.last_remainder) and
+                   (p.bk == ar_ptr.last_remainder) and
+                   (ar_ptr.last_remainder != 0)):
                     print("(LR)")
                 elif ((p.fd == p.bk) & ~ptm.inuse(p)):
                     print("(LC)")

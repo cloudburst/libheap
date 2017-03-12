@@ -68,9 +68,9 @@ class heaplsc(gdb.Command):
             else:
                 p = malloc_chunk(p.address, inuse=False, debugger=self.dbg)
 
-                if ((p.fd == ar_ptr.last_remainder)
-                   and (p.bk == ar_ptr.last_remainder)
-                   and (ar_ptr.last_remainder != 0)):
+                if ((p.fd == ar_ptr.last_remainder) and
+                   (p.bk == ar_ptr.last_remainder) and
+                   (ar_ptr.last_remainder != 0)):
                     print("|L|", end="")
                 else:
                     print("|%d|" % ptm.bin_index(p.size), end="")
