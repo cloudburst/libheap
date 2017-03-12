@@ -39,7 +39,7 @@ class pygdbpython:
         except gdb.error:
             # python2 error: Cannot convert value to int.
             # value.cast(gdb.lookup_type("unsigned long"))
-            ret = int(str(value), 16)
+            ret = int(str(value).split(' ')[0], 16)
 
         return ret
 
