@@ -7,6 +7,7 @@ except ImportError:
     print("Not running inside of GDB, exiting...")
     exit()
 
+
 def format_address(value):
     """Helper for printing gdb.Value on both python 2 and 3"""
 
