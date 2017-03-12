@@ -49,7 +49,8 @@ class print_bin_layout(gdb.Command):
         try:
             if arg.find("main_arena") == -1:
                 main_arena = self.dbg.read_variable("main_arena")
-                main_arena_address = main_arena.address
+                main_arena_address = self.dbg.format_address(
+                                                    main_arena.address)
             else:
                 # XXX: fixme
                 arg = arg.split()

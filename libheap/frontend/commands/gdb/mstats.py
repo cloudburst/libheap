@@ -47,7 +47,8 @@ class mstats(gdb.Command):
 
             if arg.find("main_arena") == -1:
                 main_arena = self.dbg.read_variable("main_arena")
-                main_arena_address = main_arena.address
+                main_arena_address = self.dbg.format_address(
+                                                main_arena.address)
             else:
                 arg = arg.split()
                 for item in arg:
@@ -124,7 +125,8 @@ class mstats(gdb.Command):
             if ar_ptr.next == main_arena_address:
                 break
             else:
-                ar_ptr = malloc_state(ar_ptr.next, debugger=self.dbg,
+                next_addr = self.dbg.format_address(ar_ptr.next)
+                ar_ptr = malloc_state(next_addr, debugger=self.dbg,
                                       version=self.version)
                 arena += 1
 

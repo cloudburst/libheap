@@ -7,6 +7,22 @@ except ImportError:
     print("Not running inside of GDB, exiting...")
     exit()
 
+def format_address(value):
+    """Helper for printing gdb.Value on both python 2 and 3"""
+
+    try:
+        ret = int(value)
+    except gdb.error:
+        # python2 error: Cannot convert value to int
+        try:
+            ret = int(str(value), 16)
+        except ValueError:
+            # work around bug where val is 'sbrk_base ""'
+            value = str(value).split()[0]
+            ret = int(str(value), 16)
+
+    return ret
+
 
 class malloc_par_printer:
     "pretty printer for the malloc_par struct (mp_)"
@@ -17,31 +33,44 @@ class malloc_par_printer:
     def to_string(self):
         mp = color_title("struct malloc_par {")
         mp += "\n{:16} = ".format("trim_threshold")
-        mp += color_value("{:#x}".format(int(self.val['trim_threshold'])))
+        val = format_address(self.val['trim_threshold'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("top_pad")
-        mp += color_value("{:#x}".format(int(self.val['top_pad'])))
+        val = format_address(self.val['top_pad'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("mmap_threshold")
-        mp += color_value("{:#x}".format(int(self.val['mmap_threshold'])))
+        val = format_address(self.val['mmap_threshold'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("arena_test")
-        mp += color_value("{:#x}".format(int(self.val['arena_test'])))
+        val = format_address(self.val['arena_test'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("arena_max")
-        mp += color_value("{:#x}".format(int(self.val['arena_max'])))
+        val = format_address(self.val['arena_max'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("n_mmaps")
-        mp += color_value("{:#x}".format(int(self.val['n_mmaps'])))
+        val = format_address(self.val['n_mmaps'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("n_mmaps_max")
-        mp += color_value("{:#x}".format(int(self.val['n_mmaps_max'])))
+        val = format_address(self.val['n_mmaps_max'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("max_n_mmaps")
-        mp += color_value("{:#x}".format(int(self.val['max_n_mmaps'])))
+        val = format_address(self.val['max_n_mmaps'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("no_dyn_threshold")
-        mp += color_value("{:#x}".format(int(self.val['no_dyn_threshold'])))
+        val = format_address(self.val['no_dyn_threshold'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("mmapped_mem")
-        mp += color_value("{:#x}".format(int(self.val['mmapped_mem'])))
+        val = format_address(self.val['mmapped_mem'])
+        mp += color_value("{:#x}".format(val))
         mp += "\n{:16} = ".format("max_mmapped_mem")
-        mp += color_value("{:#x}".format(int(self.val['max_mmapped_mem'])))
+        val = format_address(self.val['max_mmapped_mem'])
+        mp += color_value("{:#x}".format(val))
 
         # XXX: max_total_mem removed in glibc 2.24
         try:
-            val = int(self.val['max_total_mem'])
+            # compute val first so we force a gdb.error
+            val = format_address(self.val['max_total_mem'])
+
             mp += "\n{:16} = ".format("max_total_mem")
             mp += color_value("{:#x}".format(val))
         except gdb.error:
@@ -49,7 +78,8 @@ class malloc_par_printer:
             pass
 
         mp += "\n{:16} = ".format("sbrk_base")
-        mp += color_value("{:#x}".format(int(self.val['sbrk_base'])))
+        val = format_address(self.val['sbrk_base'])
+        mp += color_value("{:#x}".format(val))
         return mp
 
 
@@ -62,27 +92,35 @@ class malloc_state_printer:
     def to_string(self):
         ms = color_title("struct malloc_state {")
         ms += "\n{:16} = ".format("mutex")
-        ms += color_value("{:#x}".format(int(self.val['mutex'])))
+        val = format_address(self.val['mutex'])
+        ms += color_value("{:#x}".format(val))
         ms += "\n{:16} = ".format("flags")
-        ms += color_value("{:#x}".format(int(self.val['flags'])))
+        val = format_address(self.val['flags'])
+        ms += color_value("{:#x}".format(val))
         ms += "\n{:16} = ".format("fastbinsY")
         ms += color_value("{}".format("{...}"))
         ms += "\n{:16} = ".format("top")
-        ms += color_value("{:#x}".format(int(self.val['top'])))
+        val = format_address(self.val['top'])
+        ms += color_value("{:#x}".format(val))
         ms += "\n{:16} = ".format("last_remainder")
-        ms += color_value("{:#x}".format(int(self.val['last_remainder'])))
+        val = format_address(self.val['last_remainder'])
+        ms += color_value("{:#x}".format(val))
         ms += "\n{:16} = ".format("bins")
         ms += color_value("{}".format("{...}"))
         ms += "\n{:16} = ".format("binmap")
         ms += color_value("{}".format("{...}"))
         ms += "\n{:16} = ".format("next")
-        ms += color_value("{:#x}".format(int(self.val['next'])))
+        val = format_address(self.val['next'])
+        ms += color_value("{:#x}".format(val))
         ms += "\n{:16} = ".format("next_free")
-        ms += color_value("{:#x}".format(int(self.val['next_free'])))
+        val = format_address(self.val['next_free'])
+        ms += color_value("{:#x}".format(val))
 
         # XXX: attached_threads added in glibc 2.23
         try:
-            val = int(self.val['attached_threads'])
+            # compute val first so we force a gdb.error
+            val = format_address(self.val['attached_threads'])
+
             ms += "\n{:16} = ".format("attached_threads")
             ms += color_value("{:#x}".format(val))
         except gdb.error:
@@ -90,9 +128,11 @@ class malloc_state_printer:
             pass
 
         ms += "\n{:16} = ".format("system_mem")
-        ms += color_value("{:#x}".format(int(self.val['system_mem'])))
+        val = format_address(self.val['system_mem'])
+        ms += color_value("{:#x}".format(val))
         ms += "\n{:16} = ".format("max_system_mem")
-        ms += color_value("{:#x}".format(int(self.val['max_system_mem'])))
+        val = format_address(self.val['max_system_mem'])
+        ms += color_value("{:#x}".format(val))
         return ms
 
 
@@ -105,17 +145,23 @@ class malloc_chunk_printer:
     def to_string(self):
         mc = color_title("struct malloc_chunk {")
         mc += "\n{:11} = ".format("prev_size")
-        mc += color_value("{:#x}".format(int(self.val['prev_size'])))
+        val = format_address(self.val['prev_size'])
+        mc += color_value("{:#x}".format(val))
         mc += "\n{:11} = ".format("size")
-        mc += color_value("{:#x}".format(int(self.val['size'])))
+        val = format_address(self.val['size'])
+        mc += color_value("{:#x}".format(val))
         mc += "\n{:11} = ".format("fd")
-        mc += color_value("{:#x}".format(int(self.val['fd'])))
+        val = format_address(self.val['fd'])
+        mc += color_value("{:#x}".format(val))
         mc += "\n{:11} = ".format("bk")
-        mc += color_value("{:#x}".format(int(self.val['bk'])))
+        val = format_address(self.val['bk'])
+        mc += color_value("{:#x}".format(val))
         mc += "\n{:11} = ".format("fd_nextsize")
-        mc += color_value("{:#x}".format(int(self.val['fd_nextsize'])))
+        val = format_address(self.val['fd_nextsize'])
+        mc += color_value("{:#x}".format(val))
         mc += "\n{:11} = ".format("bk_nextsize")
-        mc += color_value("{:#x}".format(int(self.val['bk_nextsize'])))
+        val = format_address(self.val['bk_nextsize'])
+        mc += color_value("{:#x}".format(val))
         return mc
 
 
@@ -128,13 +174,17 @@ class heap_info_printer:
     def to_string(self):
         hi = color_title("struct heap_info {")
         hi += "\n{:13} = ".format("ar_ptr")
-        hi += color_value("{:#x}".format(int(self.val['ar_ptr'])))
+        val = format_address(self.val['ar_ptr'])
+        hi += color_value("{:#x}".format(val))
         hi += "\n{:13} = ".format("prev")
-        hi += color_value("{:#x}".format(int(self.val['prev'])))
+        val = format_address(self.val['prev'])
+        hi += color_value("{:#x}".format(val))
         hi += "\n{:13} = ".format("size")
-        hi += color_value("{:#x}".format(int(self.val['size'])))
+        val = format_address(self.val['size'])
+        hi += color_value("{:#x}".format(val))
         hi += "\n{:13} = ".format("mprotect_size")
-        hi += color_value("{:#x}".format(int(self.val['mprotect_size'])))
+        val = format_address(self.val['mprotect_size'])
+        hi += color_value("{:#x}".format(val))
         return hi
 
 

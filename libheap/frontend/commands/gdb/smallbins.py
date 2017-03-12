@@ -47,7 +47,7 @@ class smallbins(gdb.Command):
 
         # XXX: from old heap command, replace
         main_arena = self.dbg.read_variable("main_arena")
-        arena_address = main_arena.address
+        arena_address = self.dbg.format_address(main_arena.address)
         ar_ptr = malloc_state(arena_address, debugger=self.dbg,
                               version=self.version)
 

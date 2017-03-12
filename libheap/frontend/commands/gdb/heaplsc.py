@@ -43,7 +43,7 @@ class heaplsc(gdb.Command):
 
         # XXX: from old heap command, replace
         main_arena = self.dbg.read_variable("main_arena")
-        arena_addr = main_arena.address
+        arena_addr = self.dbg.format_address(main_arena.address)
         ar_ptr = malloc_state(arena_addr, debugger=self.dbg,
                               version=self.version)
 

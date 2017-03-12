@@ -172,32 +172,16 @@ class ptmalloc:
         chunk.size &= ~self.PREV_INUSE
         chunk.write()
 
-    # XXX: remove gdb
     def bin_at(self, m, i):
         "addressing -- note that bin_at(0) does not exist"
-        from gdb import parse_and_eval
-        from gdb import lookup_type
 
-        if self.dbg is None:
-            print_error("Please specify a debugger.")
-            import sys
+        if i == 0:
+            print_error("bin_at(0) does not exist")
             sys.exit()
 
-        if self.SIZE_SZ == 4:
-            offsetof_fd = 0x8
-            cast_type = 'unsigned int'
-        elif self.SIZE_SZ == 8:
-            offsetof_fd = 0x10
-            cast_type = 'unsigned long'
-
-        # This works on both Python 2 and 3 while casting m.address to int (in
-        # order to format it with the '{:x}'.format) only works on Python 3
-        addr = '%#x' % m.address
-
-        cmd_str = "&((struct malloc_state *) {}).bins[{}]".format(
-                  addr, int((i - 1) * 2))
-        return int(parse_and_eval(cmd_str).cast(lookup_type(cast_type))
-                   - offsetof_fd)
+        index = (i-1) * 2
+        addr = self.dbg.format_address(m.address)
+        return m.bins[index]
 
     def next_bin(self, b):
         return b + 1

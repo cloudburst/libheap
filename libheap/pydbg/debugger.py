@@ -2,6 +2,9 @@ class pydbg:
     def __init__(self, debugger):
         self.debugger = debugger
 
+    def format_address(self, value):
+        return self.debugger.format_address(value)
+
     def get_heap_address(self, mp=None):
         return self.debugger.get_heap_address(mp)
 

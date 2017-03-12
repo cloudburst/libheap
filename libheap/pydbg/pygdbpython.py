@@ -31,6 +31,18 @@ class pygdbpython:
     def execute(self, cmd, to_string=True):
         return gdb.execute(cmd, to_string=to_string)
 
+    def format_address(self, value):
+        """Helper for printing gdb.Value on both python 2 and 3
+        """
+        try:
+            ret = int(value)
+        except gdb.error:
+            # python2 error: Cannot convert value to int.
+            # value.cast(gdb.lookup_type("unsigned long"))
+            ret = int(str(value), 16)
+
+        return ret
+
     @gdb_is_running
     def get_heap_address(self, mp=None):
         """Read heap address from glibc's mp_ structure if available,
