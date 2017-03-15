@@ -4,10 +4,12 @@
 
 It is currently tested and known working on:
 
-| glibc 2.15 | glibc 2.19 | glibc 2.23 |
-| --- | --- | --- |
-| | Ubuntu 14.04 LTS i386 | Ubuntu 16.04 LTS i386 |
-| Ubuntu 12.04 LTS amd64 | Ubuntu 14.04 LTS amd64 | Ubuntu 16.04 LTS amd64 |
+| glibc | distro |
+| --- | --- |
+| **2.15** | Ubuntu 12.04 LTS amd64 |
+| **2.19** | Ubuntu 14.04 LTS i386, Ubuntu 14.04 LTS amd64
+| **2.23** | Ubuntu 16.04 LTS i386, Ubuntu 16.04 LTS amd64
+| **2.24** | Fedora 25 x86_64 |
 
 # Installation
 

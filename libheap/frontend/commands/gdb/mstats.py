@@ -135,8 +135,15 @@ class mstats(gdb.Command):
         print_value("{}".format(system_b), end='\n')
         print("{:16} = ".format("in use bytes"), end='')
         print_value("{}".format(in_use_b), end='\n')
-        print("{:16} = ".format("max system bytes"), end='')
-        print_value("{}".format(mp['max_total_mem']), end='\n')
+
+        # XXX: max_total_mem removed in 2.24
+        try:
+            # catch the error before we print anything
+            print_value("{}".format(mp['max_total_mem']), end='\n')
+            print("{:16} = ".format("max system bytes"), end='')
+        except gdb.error:
+            pass
+
         print("{:16} = ".format("max mmap regions"), end='')
         print_value("{}".format(mp['max_n_mmaps']), end='\n')
         print("{:16} = ".format("max mmap bytes"), end='')
