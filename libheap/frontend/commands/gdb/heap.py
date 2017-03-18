@@ -32,6 +32,7 @@ class heap(gdb.Command):
         self.version = version
 
     def invoke(self, arg, from_tty):
+        # XXX: self.dbg.string_to_argv
         if arg.find("-h") != -1:
             # print_header("heap ", end="")
             # print("Options:", end="\n\n")

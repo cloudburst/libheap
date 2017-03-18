@@ -135,6 +135,11 @@ class pygdbpython:
             return gdb.selected_frame().read_var(variable)
 
     @gdb_is_running
+    def string_to_argv(self, arg=None):
+        if arg is not None:
+            return gdb.string_to_argv(arg)
+
+    @gdb_is_running
     def write_memory(self, address, buf, length=None):
         if self.inferior is None:
             self.inferior = self.get_inferior()

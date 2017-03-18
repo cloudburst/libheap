@@ -44,7 +44,18 @@ class heapls(gdb.Command):
 
         # XXX: from old heap command, replace
         main_arena = self.dbg.read_variable("main_arena")
-        arena_address = self.dbg.format_address(main_arena.address)
+        main_arena_address = self.dbg.format_address(main_arena.address)
+
+        argv = self.dbg.string_to_argv(arg)
+
+        if len(argv) == 1:
+            arena_address = int(argv[0], 16)
+        elif len(argv):
+            print_error('Too many arguments')
+            return
+        else:
+            arena_address = main_arena_address
+
         ar_ptr = malloc_state(arena_address, debugger=self.dbg,
                               version=self.version)
 
@@ -52,9 +63,16 @@ class heapls(gdb.Command):
         mp_ = self.dbg.read_variable("mp_")
         mp_address = mp_.address
         mp = malloc_par(mp_address, debugger=self.dbg, version=self.version)
-        start, end = self.dbg.get_heap_address(mp)
+
+        if arena_address == main_arena_address:
+            start, _ = self.dbg.get_heap_address(mp)
+        else:
+            # XXX: start offset
+            start = arena_address + ar_ptr.size
         sbrk_base = start
 
+        # print("{:>19}".format("arena @ "), end="")
+        # print_value("{:#x}".format(arena_address), end="\n\n")
         # print_title("{:>15}".format("flat heap listing"), end="\n")
         print_title("{:>15}{:>17}{:>18}".format("ADDR", "SIZE", "STATUS"),
                     end="\n")

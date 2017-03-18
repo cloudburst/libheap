@@ -10,6 +10,7 @@ class malloc_state:
     "python representation of a struct malloc_state"
 
     def __init__(self, addr=None, mem=None, debugger=None, version=None):
+        self.size = 0
         self.mutex = 0
         self.flags = 0
         self.fastbinsY = 0
@@ -38,7 +39,7 @@ class malloc_state:
             print_error("Please specify a debugger")
             sys.exit()
 
-        self.sz = self.dbg.get_size_sz()
+        self.size_sz = self.dbg.get_size_sz()
 
         if version is None:
             print_error("Please specify a malloc_state version.")
@@ -49,21 +50,21 @@ class malloc_state:
         if mem is None:
             # a string of raw memory was not provided
             if self.version >= 2.15 and self.version < 2.23:
-                if self.sz == 4:
+                if self.size_sz == 4:
                     # sizeof(malloc_state) = 4+4+40+4+4+(254*4)+16+4+4+4+4
-                    struct_malloc_state_size = 0x450
-                elif self.sz == 8:
+                    self.size = 0x450
+                elif self.size_sz == 8:
                     # sizeof(malloc_state) = 4+4+80+8+8+(254*8)+16+8+8+8+8
-                    struct_malloc_state_size = 0x888
+                    self.size = 0x888
             elif self.version >= 2.23 and self.version <= 2.25:
                 # attached_threads added in 2.23
-                if self.sz == 4:
-                    struct_malloc_state_size = 0x454
-                elif self.sz == 8:
-                    struct_malloc_state_size = 0x890
+                if self.size_sz == 4:
+                    self.size = 0x454
+                elif self.size_sz == 8:
+                    self.size = 0x890
 
             try:
-                self.mem = self.dbg.read_memory(addr, struct_malloc_state_size)
+                self.mem = self.dbg.read_memory(addr, self.size)
             except TypeError:
                 print_error("Invalid address specified.")
                 return None
@@ -71,6 +72,8 @@ class malloc_state:
                 print_error("Could not read address {0:#x}".format(addr))
                 return None
         else:
+            # XXX: fix class size
+            # self.size = len(mem)
             self.mem = mem
 
         self.unpack_memory()
@@ -83,47 +86,47 @@ class malloc_state:
         self.mutex = self.unpack_variable("<I", 0)
         self.flags = self.unpack_variable("<I", 4)
 
-        if self.sz == 4:
+        if self.size_sz == 4:
             fmt = "<10I"
-        elif self.sz == 8:
+        elif self.size_sz == 8:
             fmt = "<10Q"
         self.fastbinsY = struct.unpack_from(fmt, self.mem, 8)
 
-        if self.sz == 4:
+        if self.size_sz == 4:
             fmt = "<I"
-        elif self.sz == 8:
+        elif self.size_sz == 8:
             fmt = "<Q"
-        offset = 8 + (10 * self.sz)
+        offset = 8 + (10 * self.size_sz)
         self.top = self.unpack_variable(fmt, offset)
-        offset = offset + self.sz
+        offset = offset + self.size_sz
         self.last_remainder = self.unpack_variable(fmt, offset)
 
-        if self.sz == 4:
+        if self.size_sz == 4:
             fmt = "<254I"
-        elif self.sz == 8:
+        elif self.size_sz == 8:
             fmt = "<254Q"
-        offset = offset + self.sz
+        offset = offset + self.size_sz
         self.bins = struct.unpack_from(fmt, self.mem, offset)
 
-        offset = offset + (254 * self.sz)
+        offset = offset + (254 * self.size_sz)
         self.binmap = struct.unpack_from("<IIII", self.mem, offset)
 
-        if self.sz == 4:
+        if self.size_sz == 4:
             fmt = "<I"
-        elif self.sz == 8:
+        elif self.size_sz == 8:
             fmt = "<Q"
         offset = offset + 16
         self.next = self.unpack_variable(fmt, offset)
-        offset = offset + self.sz
+        offset = offset + self.size_sz
         self.next_free = self.unpack_variable(fmt, offset)
 
         if self.version >= 2.23:
-            offset = offset + self.sz
+            offset = offset + self.size_sz
             self.attached_threads = self.unpack_variable(fmt, offset)
 
-        offset = offset + self.sz
+        offset = offset + self.size_sz
         self.system_mem = self.unpack_variable(fmt, offset)
-        offset = offset + self.sz
+        offset = offset + self.size_sz
         self.max_system_mem = self.unpack_variable(fmt, offset)
 
     def unpack_variable(self, fmt, offset):
@@ -131,12 +134,12 @@ class malloc_state:
 
     def write(self, inferior=None):
         # XXX: fixme for new format
-        if self.sz == 4:
+        if self.size_sz == 4:
             mem = struct.pack("<275I", self.mutex, self.flags, self.fastbinsY,
                               self.top, self.last_remainder, self.bins,
                               self.binmap, self.next, self.system_mem,
                               self.max_system_mem)
-        elif self.sz == 8:
+        elif self.size_sz == 8:
             mem = struct.pack("<II266QIIIIQQQ", self.mutex, self.flags,
                               self.fastbinsY, self.top, self.last_remainder,
                               self.bins, self.binmap, self.next,

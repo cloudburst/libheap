@@ -68,6 +68,10 @@ A number of different functions exist to print the overall state of the heap as 
     chunk      0x603150         0x20eb0      (top)
     sbrk_end   0x624008
 
+An optional arena address can also be passed as the first argument to heapls
+
+    (gdb) heapls 0x602c00
+
 #### heaplsc
     (gdb) heaplsc
     compact arena layout
