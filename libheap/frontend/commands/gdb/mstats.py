@@ -139,8 +139,10 @@ class mstats(gdb.Command):
         # XXX: max_total_mem removed in 2.24
         try:
             # catch the error before we print anything
-            print_value("{}".format(mp['max_total_mem']), end='\n')
+            val = mp['max_total_mem']
+
             print("{:16} = ".format("max system bytes"), end='')
+            print_value("{}".format(val), end='\n')
         except gdb.error:
             pass
 
