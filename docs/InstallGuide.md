@@ -36,6 +36,9 @@ If you are using PEDA (a gdb frontend), its buffering seems to conflict with hea
 
 Edit `libheap.cfg` included in `site-packages/libheap` to set your desired glibc version.  I have not added glibc version detection yet.
 
+    [Glibc]
+    version = 2.24
+
 # Learning Resources
 
 I'd recommend installing shellphish's [how2heap](https://github.com/shellphish/how2heap) alongside this tool for learning ptmalloc internals.
