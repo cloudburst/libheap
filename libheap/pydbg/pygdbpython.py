@@ -132,7 +132,14 @@ class pygdbpython:
         except RuntimeError:
             # No idea why this works but sometimes the frame is not selected
             print_error("No gdb frame is currently selected.\n")
-            return gdb.selected_frame().read_var(variable)
+            try:
+                return gdb.selected_frame().read_var(variable)
+            except ValueError:
+                # variable was not found
+                return None
+        except ValueError:
+            # variable was not found
+            return None
 
     @gdb_is_running
     def string_to_argv(self, arg=None):
