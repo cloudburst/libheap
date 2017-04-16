@@ -29,13 +29,6 @@ A number of different functions exist to print the overall state of the heap as 
     Arena(s) found:
          arena @ 0xf2f3a0
 
-#### freebins
-    (gdb) freebins
-    fast bin 0   @ 0x804b000
-        free chunk @ 0x804b000 - size 0x10
-    unsorted bin @ 0xf2f3d8
-        free_chunk @ 0x804b010 - size 0x88
-
 #### fastbins
     (gdb) fastbins
     fastbins
@@ -80,6 +73,13 @@ An optional arena address can also be passed as the first argument to heapls
     (gdb) heaplsc
     compact arena layout
     |A||11||A||11||A||T|
+
+#### freebins
+    (gdb) freebins
+    fast bin 0   @ 0x804b000
+        free chunk @ 0x804b000 - size 0x10
+    unsorted bin @ 0xf2f3d8
+        free_chunk @ 0x804b010 - size 0x88
 
 ## Statistics
 
