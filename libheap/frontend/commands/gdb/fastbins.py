@@ -48,28 +48,32 @@ class fastbins(gdb.Command):
         # XXX: from old heap command, replace
         main_arena = self.dbg.read_variable("main_arena")
         arena_address = self.dbg.format_address(main_arena.address)
+        thread_arena = self.dbg.read_variable("thread_arena")
+        if thread_arena is not None:
+            thread_arena_address = self.dbg.format_address(thread_arena)
+        else:
+            thread_arena_address = arena_address
+
+        argv = self.dbg.string_to_argv(arg)
+        if len(argv) == 1:
+            arena_address = int(argv[0], 16)
+        elif len(argv):
+            print_error('Too many arguments')
+            return
+        else:
+            arena_address = thread_arena_address
+
         ar_ptr = malloc_state(arena_address, debugger=self.dbg,
                               version=self.version)
+
         # 8 bytes into struct malloc_state on both 32/64bit
         # XXX: fixme for glibc <= 2.19 with THREAD_STATS
         fastbinsY = int(ar_ptr.address) + 8
         fb_base = fastbinsY
 
-        if len(arg) == 0:
-            fb_num = None
-        else:
-            fb_num = int(arg.split(" ")[0])
-
-            if (fb_num) >= ptm.NFASTBINS:
-                print_error("Invalid fastbin number")
-                return
-
         print_title("fastbins", end="")
 
         for fb in range(0, ptm.NFASTBINS):
-            if fb_num is not None:
-                fb = fb_num
-
             offset = int(fb_base + fb * ptm.SIZE_SZ)
             try:
                 mem = self.dbg.read_memory(offset, ptm.SIZE_SZ)
@@ -105,8 +109,5 @@ class fastbins(gdb.Command):
 
                     chunk = malloc_chunk(chunk.fd, inuse=False,
                                          debugger=self.dbg)
-
-            if fb_num is not None:  # only print one fastbin
-                break
 
         print("")
