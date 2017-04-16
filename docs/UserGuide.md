@@ -50,6 +50,10 @@ A number of different functions exist to print the overall state of the heap as 
     [ fb  8 ] 0xf2f3c8 -> [ 0x00000000 ]
     [ fb  9 ] 0xf2f3cc -> [ 0x00000000 ]
 
+An optional arena address can also be passed as the first argument to fastbins
+
+    (gdb) fastbins 0x602c00
+
 #### smallbins
     (gdb) smallbins 1
     smallbins
