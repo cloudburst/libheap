@@ -30,6 +30,7 @@ class heap(gdb.Command):
             sys.exit()
 
         self.version = version
+        print(self.version)
 
     def invoke(self, arg, from_tty):
         # XXX: self.dbg.string_to_argv
