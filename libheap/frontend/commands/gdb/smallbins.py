@@ -52,12 +52,7 @@ class smallbins(gdb.Command):
                               version=self.version)
 
         # mchunkptr bins in struct malloc_state
-        if ptm.SIZE_SZ == 4:
-            bins_offset = 4 + 4 + 40 + 4 + 4  # 56
-            sb_base = int(ar_ptr.address) + bins_offset
-        elif ptm.SIZE_SZ == 8:
-            bins_offset = 4 + 4 + 80 + 8 + 8  # 104
-            sb_base = int(ar_ptr.address) + bins_offset
+        sb_base = int(ar_ptr.address) + ar_ptr.bins_offset
 
         if len(arg) == 0:
             sb_num = None
